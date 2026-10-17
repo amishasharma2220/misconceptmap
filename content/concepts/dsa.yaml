@@ -1,0 +1,171 @@
+# DSA concept graph for GATE CS (Programming & Data Structures + Algorithms).
+# One concept = something small enough to be wrong about in one specific way.
+# `prereqs` lists slugs that must be understood first. The loader rejects cycles.
+# Edit freely while you revise; re-run the loader to sync the database.
+
+subject:
+  code: DSA
+  name: Data Structures and Algorithms
+
+concepts:
+  # --- foundations ---
+  - slug: asymptotic-notation
+    name: Asymptotic notation (O, Ω, Θ)
+    difficulty: 1
+    description: Growth-rate bounds and how to compare functions.
+    prereqs: []
+
+  - slug: recurrence-relations
+    name: Recurrence relations
+    difficulty: 2
+    description: Writing T(n) for recursive algorithms; substitution and recursion-tree methods.
+    prereqs: [asymptotic-notation]
+
+  - slug: master-theorem
+    name: Master theorem
+    difficulty: 3
+    description: The three cases for T(n) = aT(n/b) + f(n), and when the theorem does not apply.
+    prereqs: [recurrence-relations]
+
+  # --- linear structures ---
+  - slug: arrays-pointers
+    name: Arrays and pointer arithmetic
+    difficulty: 2
+    description: Row/column-major addressing, pointer arithmetic in C, array decay.
+    prereqs: []
+
+  - slug: recursion-c
+    name: Recursion and parameter passing in C
+    difficulty: 2
+    description: Tracing recursive calls, static variables, call by value vs pointer.
+    prereqs: [arrays-pointers]
+
+  - slug: linked-lists
+    name: Linked lists
+    difficulty: 2
+    description: Insertion, deletion, reversal, cycle detection.
+    prereqs: [arrays-pointers]
+
+  - slug: stacks-queues
+    name: Stacks and queues
+    difficulty: 2
+    description: Array and list implementations, circular queues, infix/postfix evaluation.
+    prereqs: [arrays-pointers]
+
+  # --- trees ---
+  - slug: binary-trees
+    name: Binary trees and traversals
+    difficulty: 2
+    description: Pre/in/post/level order; reconstructing trees from traversals; node-count properties.
+    prereqs: [recursion-c]
+
+  - slug: binary-search-trees
+    name: Binary search trees
+    difficulty: 3
+    description: Search, insert, delete (inorder successor); height bounds.
+    prereqs: [binary-trees]
+
+  - slug: avl-trees
+    name: AVL trees
+    difficulty: 3
+    description: Balance factor, rotations, minimum nodes for a given height.
+    prereqs: [binary-search-trees]
+
+  - slug: binary-heaps
+    name: Binary heaps
+    difficulty: 3
+    description: Array representation, heapify, build-heap in O(n), insert and extract.
+    prereqs: [binary-trees, asymptotic-notation]
+
+  - slug: hashing
+    name: Hashing
+    difficulty: 3
+    description: Hash functions, chaining, open addressing (linear/quadratic probing), load factor.
+    prereqs: [arrays-pointers]
+
+  # --- sorting & searching ---
+  - slug: binary-search
+    name: Binary search
+    difficulty: 2
+    description: Correct bounds, comparisons count, variants.
+    prereqs: [asymptotic-notation]
+
+  - slug: comparison-sorting
+    name: Comparison sorting (insertion, selection, bubble)
+    difficulty: 2
+    description: Best/worst cases, number of swaps and comparisons.
+    prereqs: [asymptotic-notation]
+
+  - slug: merge-sort
+    name: Merge sort
+    difficulty: 2
+    description: Divide and conquer, merge cost, space usage.
+    prereqs: [comparison-sorting, recurrence-relations]
+
+  - slug: quicksort
+    name: Quicksort
+    difficulty: 3
+    description: Partition schemes, worst-case inputs, pivot choice.
+    prereqs: [comparison-sorting, recurrence-relations]
+
+  - slug: heap-sort
+    name: Heap sort
+    difficulty: 3
+    description: Build-heap then repeated extraction; in-place behaviour.
+    prereqs: [binary-heaps, comparison-sorting]
+
+  - slug: sorting-stability-inplace
+    name: Stability and in-place sorting
+    difficulty: 3
+    description: Which sorts are stable, which are in-place, and why the two are independent.
+    prereqs: [merge-sort, quicksort, heap-sort]
+
+  - slug: sorting-lower-bound
+    name: Comparison-sort lower bound and linear-time sorts
+    difficulty: 3
+    description: Ω(n log n) decision-tree bound; counting and radix sort assumptions.
+    prereqs: [comparison-sorting]
+
+  # --- graphs ---
+  - slug: graph-representation
+    name: Graph representation
+    difficulty: 1
+    description: Adjacency matrix vs list; space and time trade-offs.
+    prereqs: []
+
+  - slug: bfs-dfs
+    name: BFS and DFS
+    difficulty: 2
+    description: Traversal order, edge classification, complexity on matrix vs list.
+    prereqs: [graph-representation, stacks-queues]
+
+  - slug: topological-sort
+    name: Topological sort
+    difficulty: 3
+    description: DFS finishing order and Kahn's algorithm; number of valid orderings.
+    prereqs: [bfs-dfs]
+
+  - slug: minimum-spanning-trees
+    name: Minimum spanning trees
+    difficulty: 3
+    description: Kruskal and Prim; cut and cycle properties; uniqueness.
+    prereqs: [bfs-dfs, binary-heaps]
+
+  - slug: shortest-paths
+    name: Single-source shortest paths
+    difficulty: 3
+    description: Dijkstra (and why negative edges break it), Bellman-Ford.
+    prereqs: [bfs-dfs, binary-heaps]
+
+  # --- design paradigms ---
+  - slug: greedy-algorithms
+    name: Greedy algorithms
+    difficulty: 3
+    description: Activity selection, Huffman coding, fractional knapsack; when greedy fails.
+    prereqs: [comparison-sorting]
+
+  - slug: dynamic-programming
+    name: Dynamic programming
+    difficulty: 4
+    description: Optimal substructure, overlapping subproblems; LCS, 0/1 knapsack, matrix-chain.
+    prereqs: [recursion-c, recurrence-relations]

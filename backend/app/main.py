@@ -2,10 +2,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
+from app.auth.router import router as auth_router
+from app.content.router import router as content_router
 from app.core.config import get_settings
 from app.core.db import DbSession
 
-app = FastAPI(title="MisconceptMap API", version="0.1.0")
+app = FastAPI(title="MisconceptMap API", version="0.2.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -20,3 +22,7 @@ app.add_middleware(
 def health(db: DbSession) -> dict:
     db.execute(text("SELECT 1"))
     return {"status": "ok", "db": "ok"}
+
+
+app.include_router(auth_router)
+app.include_router(content_router)

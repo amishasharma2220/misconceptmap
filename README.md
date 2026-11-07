@@ -2,7 +2,9 @@
 
 GATE CS practice that diagnoses **why** you got a question wrong. Every wrong option is tagged with a named misconception, a knowledge-tracing model estimates mastery per concept, and the next question targets your weakest prerequisite.
 
-> Status: **Week 1 — foundations.** Database schema, concept-graph loader, API and frontend shells, CI. Practice loop arrives in week 3.
+> Status: **Week 2 + frontend.** Accounts and admin role, question editor with LLM-drafted misconception tags, and the full student frontend: landing site, dashboard, three-pane practice, review queue, analytics, concept map and an AI study coach panel.
+>
+> The student screens currently run on sample data (`frontend/src/data/sample.ts`) and a sample coach (`frontend/src/coach/sampleCoach.ts`). Both are isolated behind one hook each, so wiring them to the backend in week 3 changes only those files.
 
 ## Stack
 
@@ -40,11 +42,21 @@ npm run dev
 
 The home page shows a green badge when the frontend can reach the API and database.
 
+### Become an admin
+
+1. Create an account in the app (`/signup`).
+2. In `backend/`, run `python -m app.auth.make_admin you@example.com`.
+3. Sign out and back in. **Manage questions** now appears.
+
+### Turn on AI tag drafting (optional)
+
+Get a free key at <https://aistudio.google.com/apikey>, put it in `backend/.env` as `LLM_API_KEY=...`, and restart the backend. Without a key everything works except the **Draft tags** button. The model only drafts: nothing reaches students until you approve the question, and each approval records whether the draft was accepted unchanged.
+
 ### Tests
 
 ```bash
 docker compose exec db createdb -U mm misconceptmap_test   # once
-cd backend && pytest -q        # graph validation, loader, /health
+cd backend && pytest -q        # auth, content rules, tagging (fake LLM), loader
 cd frontend && npm test        # UI tests
 ```
 

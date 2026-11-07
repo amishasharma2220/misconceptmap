@@ -1,5 +1,83 @@
 @import "tailwindcss";
+@import "katex/dist/katex.min.css";
+@import "@xyflow/react/dist/style.css";
+
+/* Tokens: a GATE answer sheet. Navy ink on cool white paper, OMR blue for the
+   marked bubble, correction-pen red for misconceptions. Mastery runs red -> amber -> green
+   (validated for colour-blind separation; always paired with a % label). */
+@theme {
+  --font-sans: "Atkinson Hyperlegible", ui-sans-serif, system-ui, sans-serif;
+  --color-paper: #f6f7f9;
+  --color-sheet: #ffffff;
+  --color-ink: #1a2232;
+  --color-ink-soft: #4a5468;
+  --color-ink-faint: #7a8496;
+  --color-rule: #d6dce6;
+  --color-rule-soft: #e9edf3;
+  --color-omr: #2450b8;
+  --color-omr-tint: #e8eefb;
+  --color-pen: #b42347;
+  --color-pen-tint: #fbecef;
+  --color-ok: #1d7044;
+  --color-ok-tint: #e6f2eb;
+  --color-amber: #c07a12;
+  --color-amber-tint: #fbf1e1;
+  --color-navy: #141b2a;
+}
 
 body {
-  @apply bg-stone-50 text-stone-900 antialiased;
+  @apply bg-paper font-sans text-ink antialiased;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-omr);
+  outline-offset: 2px;
+}
+
+/* Rendered Markdown (question stems, options, explanations, coach replies). */
+.prose-q p {
+  margin: 0 0 0.6em;
+}
+.prose-q p:last-child {
+  margin-bottom: 0;
+}
+.prose-q code {
+  @apply rounded bg-paper px-1 text-[0.92em];
+}
+.prose-q pre {
+  @apply my-2 overflow-x-auto rounded bg-paper p-3 text-sm;
+}
+.prose-q ul,
+.prose-q ol {
+  margin: 0 0 0.6em 1.25em;
+  list-style: revert;
+}
+.prose-q li {
+  margin: 0.15em 0;
+}
+.prose-q strong {
+  font-weight: 700;
+}
+.prose-q .katex-display {
+  margin: 0.5em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* Concept map nodes inherit the app font. */
+.react-flow {
+  font-family: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
 }

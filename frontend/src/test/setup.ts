@@ -13,3 +13,16 @@ class ResizeObserverStub {
 }
 globalThis.ResizeObserver ??= ResizeObserverStub as unknown as typeof ResizeObserver
 Element.prototype.scrollIntoView ??= function () {}
+
+class IntersectionObserverStub {
+  readonly root = null
+  readonly rootMargin = ''
+  readonly thresholds = []
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+  takeRecords() {
+    return []
+  }
+}
+globalThis.IntersectionObserver ??= IntersectionObserverStub as unknown as typeof IntersectionObserver

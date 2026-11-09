@@ -30,6 +30,17 @@ test('landing page explains the product to signed-out visitors', () => {
   expect(screen.getAllByRole('link', { name: /create account/i }).length).toBeGreaterThan(0)
 })
 
+test('visitors can answer the hero question and see the misconception', async () => {
+  renderApp(<App />)
+  const group = screen.getByRole('radiogroup', { name: 'Answer options' })
+  await userEvent.click(within(group).getByRole('radio', { name: /heap sort/i }))
+  expect(await screen.findByText('You may believe: heap sort is stable')).toBeInTheDocument()
+  expect(screen.getByText(/35% → \d+%/)).toBeInTheDocument()
+  await userEvent.click(screen.getByRole('button', { name: /try another/i }))
+  expect(await screen.findByText('2 of 3', {}, { timeout: 2000 })).toBeInTheDocument()
+  await waitFor(() => expect(screen.queryByText('You may believe: heap sort is stable')).not.toBeInTheDocument(), { timeout: 2000 })
+})
+
 test('signing in stores the token and lands on the dashboard', async () => {
   const fetch = mockApi([
     ['POST', '/auth/login', 200, { access_token: 'tok-123', token_type: 'bearer', user: student }],

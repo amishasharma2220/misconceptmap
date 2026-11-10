@@ -213,27 +213,85 @@ test('an empty review queue explains what to do instead of failing', async () =>
   expect(screen.getByRole('link', { name: 'Start an adaptive session' })).toBeInTheDocument()
 })
 
+function coachReply(text: string, card: unknown = null, source: 'ai' | 'basic' = 'ai') {
+  return { conversation_id: 3, title: 'Chat', message: { id: 9, role: 'coach', text, card, source, created_at: '2026-11-10T00:00:00Z' } }
+}
+
 test('the coach recommends questions with a start button', async () => {
-  signedIn()
+  const card = {
+    kind: 'recommend',
+    items: [
+      { questionId: 101, stem: 'Which sort is stable?', concept: 'Heap sort', reason: 'Practises Heap sort', difficulty: 3 },
+      { questionId: 102, stem: 'Solve the recurrence', concept: 'Master theorem', reason: 'New concept', difficulty: 3 },
+    ],
+  }
+  const fetch = signedIn('student', [
+    ['GET', '/coach/status', 200, { ai: true, model: 'gemini' }],
+    ['POST', '/coach/chat', 200, coachReply('Start with these two.', card)],
+  ])
   renderApp(<App />, '/home')
   await userEvent.click(await screen.findByRole('button', { name: /ask coach/i }))
   const panel = screen.getByRole('complementary', { name: 'AI coach' })
   await userEvent.click(within(panel).getByRole('button', { name: 'What should I practise today?' }))
 
-  expect(await within(panel).findByText('Recommended for you', {}, { timeout: 2000 })).toBeInTheDocument()
-  expect(within(panel).getAllByRole('button', { name: /start/i }).length).toBeGreaterThan(1)
+  expect(await within(panel).findByText('Start with these two.')).toBeInTheDocument()
+  expect(within(panel).getByText('Recommended for you')).toBeInTheDocument()
+  expect(within(panel).getByRole('button', { name: 'Start all 2 as a session' })).toBeInTheDocument()
+  const call = fetch.mock.calls.find(([url]) => String(url).includes('/coach/chat'))!
+  expect(JSON.parse(call[1]!.body as string)).toMatchObject({
+    message: 'What should I practise today?',
+    screen: { label: 'Dashboard', answered: false },
+  })
 })
 
-test('the coach gives a hint, not the answer, before you submit', async () => {
-  signedIn('student', [
+test('asking for a hint sends the question on screen and shows the hint', async () => {
+  const fetch = signedIn('student', [
     ['POST', '/sessions', 201, sessionWith(102)],
     ['GET', '/sessions/7', 200, sessionWith(102)],
+    ['GET', '/coach/status', 200, { ai: false, model: null }],
+    [
+      'POST',
+      '/coach/chat',
+      200,
+      coachReply('A nudge, not the answer:', { kind: 'mistake', hintOnly: true, concept: 'Master theorem', steps: ['Compare f(n) with n^(log_b a).'] }, 'basic'),
+    ],
   ])
   renderApp(<App />, '/practice?q=102')
   await userEvent.click(await screen.findByRole('button', { name: /ask for a hint/i }))
   const panel = screen.getByRole('complementary', { name: 'AI coach' })
-  await waitFor(() => expect(within(panel).getByText(/won't reveal the answer/)).toBeInTheDocument(), { timeout: 2000 })
-  expect(within(panel).queryByText(/n \\log n/)).not.toBeInTheDocument()
+  expect(await within(panel).findByText('Compare f(n) with n^(log_b a).')).toBeInTheDocument()
+  expect(within(panel).getByText('Basic coach')).toBeInTheDocument()
+  const call = fetch.mock.calls.find(([url]) => String(url).includes('/coach/chat'))!
+  expect(JSON.parse(call[1]!.body as string).screen).toMatchObject({ question_id: 102, answered: false })
+})
+
+test('a coach error is shown in the thread', async () => {
+  signedIn('student', [
+    ['GET', '/coach/status', 200, { ai: true, model: 'gemini' }],
+    ['POST', '/coach/chat', 429, { detail: 'You have sent a lot of messages this hour. Try again later.' }],
+  ])
+  renderApp(<App />, '/home')
+  await userEvent.click(await screen.findByRole('button', { name: /ask coach/i }))
+  const panel = screen.getByRole('complementary', { name: 'AI coach' })
+  await userEvent.type(within(panel).getByRole('textbox', { name: 'Message the coach' }), 'hello{Enter}')
+  expect(await within(panel).findByRole('alert')).toHaveTextContent('Try again later')
+})
+
+test('the coach page lists saved conversations and opens one', async () => {
+  signedIn('student', [
+    ['GET', '/coach/status', 200, { ai: true, model: 'gemini' }],
+    ['GET', '/coach/conversations/3', 200, {
+      id: 3, title: 'Plan for the week', updated_at: '2026-11-10T00:00:00Z',
+      messages: [
+        { id: 1, role: 'user', text: 'Plan for the week', card: null, source: null },
+        { id: 2, role: 'coach', text: 'Here is your week.', card: null, source: 'ai' },
+      ],
+    }],
+    ['GET', '/coach/conversations', 200, [{ id: 3, title: 'Plan for the week', updated_at: '2026-11-10T00:00:00Z' }]],
+  ])
+  renderApp(<App />, '/coach')
+  await userEvent.click(await screen.findByRole('button', { name: 'Plan for the week' }))
+  expect(await screen.findByText('Here is your week.')).toBeInTheDocument()
 })
 
 test('unknown routes show not found', () => {

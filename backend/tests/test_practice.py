@@ -16,14 +16,6 @@ QUESTIONS_YAML = (
 )
 
 
-@pytest.fixture
-def bank(db, dsa):
-    """The real starter question bank; returns {key: question_id}."""
-    load(db, yaml.safe_load(QUESTIONS_YAML.read_text()))
-    db.flush()
-    return dict(db.execute(select(Question.import_key, Question.id)).all())
-
-
 def correct_label(db, qid):
     q = db.get(Question, qid)
     return next(o.label for o in q.options if o.is_correct)

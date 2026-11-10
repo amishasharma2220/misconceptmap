@@ -1,4 +1,4 @@
-// What the coach can reply with. The backend coach endpoint will return these same shapes.
+// What the coach can reply with: the same shapes as backend/app/coach/cards.py.
 
 export type RecommendItem = {
   questionId: number
@@ -27,7 +27,23 @@ export type CoachMessage = {
   id: string
   role: 'user' | 'coach'
   text: string
-  card?: CoachCard
+  card?: CoachCard | null
+  /** 'ai' = written by the model; 'basic' = the rule-based coach (no AI key, or the model failed) */
+  source?: 'ai' | 'basic' | null
+  /** the message could not be sent */
+  error?: boolean
+}
+
+export type ChatOut = {
+  conversation_id: number
+  title: string
+  message: { id: number; role: 'coach'; text: string; card: CoachCard | null; source: 'ai' | 'basic' | null; created_at: string }
+}
+
+export type ConversationSummary = { id: number; title: string; updated_at: string }
+
+export type ConversationOut = ConversationSummary & {
+  messages: { id: number; role: 'user' | 'coach'; text: string; card: CoachCard | null; source: 'ai' | 'basic' | null }[]
 }
 
 /** What the student is looking at, so replies can be specific. */

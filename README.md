@@ -49,15 +49,20 @@ The home page shows a green badge when the frontend can reach the API and databa
 2. In `backend/`, run `python -m app.auth.make_admin you@example.com`.
 3. Sign out and back in. **Manage questions** now appears.
 
-### Turn on AI tag drafting (optional)
+### Turn on AI (optional): the coach and tag drafting
 
-Get a free key at <https://aistudio.google.com/apikey>, put it in `backend/.env` as `LLM_API_KEY=...`, and restart the backend. Without a key everything works except the **Draft tags** button. The model only drafts: nothing reaches students until you approve the question, and each approval records whether the draft was accepted unchanged.
+Get a free key at <https://aistudio.google.com/apikey>, put it in `backend/.env` as `LLM_API_KEY=...`, and restart the backend. The same key powers two things:
+
+- **The AI coach** answers in its own words. Without a key, a basic rule-based coach still recommends questions, plans the week, explains mistakes and outlines concepts; its replies are labelled "Basic coach".
+- **Draft tags** in the admin editor. Without a key, that button is unavailable.
+
+For tag drafting, the model only drafts: nothing reaches students until you approve the question, and each approval records whether the draft was accepted unchanged.
 
 ### Tests
 
 ```bash
 docker compose exec db createdb -U mm misconceptmap_test   # once
-cd backend && pytest -q        # auth, content, tagging, engine, practice API, snapshot
+cd backend && pytest -q        # auth, content, tagging, engine, practice, snapshot, coach
 cd frontend && npm test        # UI tests
 ```
 
@@ -72,6 +77,7 @@ Starter questions live in `content/questions/*.yaml`, each wrong option linked t
 - **Choosing questions** (`backend/app/engine/selector.py`): take the weakest concept that still has unseen questions; if one of its prerequisites is below 60% and has questions, practise that prerequisite first. Every question shows the reason it was picked.
 - **Mastery** (`engine/bkt.py`): Bayesian Knowledge Tracing per concept, updated on every answer for every concept the question tests. Numerical questions use a lower guess rate.
 - **Review queue** (`engine/scheduler.py`): a wrong answer comes back in 1 day; correct reviews push it out by a growing interval until it leaves the queue.
+- **The coach** (`backend/app/coach/`): every number it quotes comes from your data. Before you submit, the model never receives the correct option or the explanation, and a check stops replies that name the answer. The question cards and plans under its replies are built by the server, so they only ever contain real questions. Conversations are saved per account, capped at 40 messages an hour.
 - **Dashboard data** (`GET /me/snapshot`): computed from the append-only attempt log, with mastery history rebuilt by replaying attempts.
 
 ## Layout

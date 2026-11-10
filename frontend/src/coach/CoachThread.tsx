@@ -5,12 +5,13 @@ import { Markdown } from '../components/Markdown'
 import { btn, Chip } from '../components/ui'
 import { useStudent } from '../data/student'
 import { useCoach } from './CoachContext'
-import { suggestionsFor } from './sampleCoach'
+import { suggestionsFor } from './suggestions'
 import type { CoachCard, CoachMessage } from './types'
 
 /** The conversation + composer. Used by the side panel and the full /coach page. */
 export function CoachThread({ wide = false }: { wide?: boolean }) {
-  const { messages, thinking, send, screen } = useCoach()
+  const { messages, thinking, send, screen, aiEnabled } = useCoach()
+  const { data } = useStudent()
   const [draft, setDraft] = useState('')
   const end = useRef<HTMLDivElement>(null)
 
@@ -36,8 +37,15 @@ export function CoachThread({ wide = false }: { wide?: boolean }) {
           <div className="space-y-3">
             <p className="text-sm text-ink-soft">
               Ask for questions to practise, a hint on the question in front of you, why an answer was wrong, a
-              study plan, or any GATE CS concept.
+              study plan, or any GATE CS concept. Answers use your own practice history.
             </p>
+            {aiEnabled === false && (
+              <p className="rounded-md bg-amber-tint px-3 py-2 text-xs text-ink-soft">
+                Running as the <strong>basic coach</strong>: it recommends questions, plans your week, explains
+                mistakes and outlines concepts, but can't hold a free conversation. Add an AI key on the server to
+                turn on full answers.
+              </p>
+            )}
           </div>
         )}
         {messages.map((m) => (
@@ -56,7 +64,7 @@ export function CoachThread({ wide = false }: { wide?: boolean }) {
       <div className={`border-t border-rule bg-sheet px-4 pb-3 pt-3 ${wide ? 'mx-auto w-full max-w-3xl' : ''}`}>
         {messages.length === 0 && (
           <div className="mb-3 flex flex-wrap gap-2">
-            {suggestionsFor(screen).map((s) => (
+            {suggestionsFor(screen, data).map((s) => (
               <button
                 key={s}
                 onClick={() => send(s)}
@@ -101,10 +109,21 @@ function Message({ m }: { m: CoachMessage }) {
         <p className="max-w-[85%] rounded-lg bg-omr px-3 py-2 text-sm text-white">{m.text}</p>
       </div>
     )
+  if (m.error)
+    return (
+      <p role="alert" className="rounded-md bg-pen-tint px-3 py-2 text-sm text-pen">
+        {m.text}
+      </p>
+    )
   return (
     <div className="space-y-2">
       <Markdown className="text-sm">{m.text}</Markdown>
       {m.card && <Card card={m.card} />}
+      {m.source === 'basic' && (
+        <p className="text-[11px] text-ink-faint" title="Rule-based reply: no AI key is set, or the AI model was unavailable">
+          Basic coach
+        </p>
+      )}
     </div>
   )
 }

@@ -225,3 +225,35 @@ class BKTParams(Base):
     p_slip: Mapped[float | None] = mapped_column(REAL)
     p_guess: Mapped[float | None] = mapped_column(REAL)
     fitted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+# ---------------------------------------------------------------- coach
+
+
+class CoachConversation(Base):
+    __tablename__ = "coach_conversations"
+    __table_args__ = (Index("ix_coach_conv_user_updated", "user_id", "updated_at"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    title: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class CoachMessage(Base):
+    __tablename__ = "coach_messages"
+    __table_args__ = (
+        CheckConstraint("role IN ('user','coach')", name="ck_coach_role"),
+        Index("ix_coach_msg_conv", "conversation_id", "id"),
+    )
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    conversation_id: Mapped[int] = mapped_column(
+        ForeignKey("coach_conversations.id", ondelete="CASCADE")
+    )
+    role: Mapped[str] = mapped_column(Text)
+    text: Mapped[str] = mapped_column(Text)
+    card: Mapped[dict | None] = mapped_column(JSONB)
+    screen: Mapped[dict | None] = mapped_column(JSONB)  # what the student was looking at
+    source: Mapped[str | None] = mapped_column(Text)  # 'ai' | 'basic' for coach replies
+    model: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

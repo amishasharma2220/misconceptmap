@@ -37,13 +37,18 @@ def db():
 
 # ---------------------------------------------------------------- API helpers
 
+from pathlib import Path  # noqa: E402
+
+import yaml  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
+from sqlalchemy import select  # noqa: E402
 
 from app.content.loader import load_subject, parse_file  # noqa: E402
+from app.content.questions_loader import load as load_questions  # noqa: E402
 from app.core.db import get_db  # noqa: E402
 from app.core.security import create_access_token, hash_password  # noqa: E402
 from app.main import app  # noqa: E402
-from app.models import User  # noqa: E402
+from app.models import Question, User  # noqa: E402
 from app.tagging.llm import get_llm_client  # noqa: E402
 
 DSA_YAML = os.path.join(os.path.dirname(__file__), "..", "..", "content", "concepts", "dsa.yaml")
@@ -106,3 +111,14 @@ def dsa(db):
     from app.models import Concept
 
     return dict(db.execute(select(Concept.slug, Concept.id)).all())
+
+
+QUESTIONS_YAML = Path(__file__).resolve().parents[2] / "content" / "questions" / "dsa.yaml"
+
+
+@pytest.fixture
+def bank(db, dsa):
+    """The real starter question bank; returns {key: question_id}."""
+    load_questions(db, yaml.safe_load(QUESTIONS_YAML.read_text()))
+    db.flush()
+    return dict(db.execute(select(Question.import_key, Question.id)).all())

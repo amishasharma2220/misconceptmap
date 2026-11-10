@@ -86,6 +86,8 @@ class Question(Base):
     nat_answer_min: Mapped[Decimal | None] = mapped_column(Numeric)
     nat_answer_max: Mapped[Decimal | None] = mapped_column(Numeric)
     status: Mapped[str] = mapped_column(Text, server_default="draft")
+    # Set for questions loaded from content/questions/*.yaml so re-imports update in place.
+    import_key: Mapped[str | None] = mapped_column(Text, unique=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     options: Mapped[list["Option"]] = relationship(
@@ -143,14 +145,32 @@ class User(Base):
 class PracticeSession(Base):
     __tablename__ = "sessions"
     __table_args__ = (
-        CheckConstraint("mode IN ('adaptive','review','subject','mock')", name="ck_session_mode"),
+        CheckConstraint(
+            "mode IN ('adaptive','review','concept','questions','subject','mock')",
+            name="ck_session_mode",
+        ),
     )
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     mode: Mapped[str | None] = mapped_column(Text)
     subject_id: Mapped[int | None] = mapped_column(ForeignKey("subjects.id"))
+    concept_id: Mapped[int | None] = mapped_column(ForeignKey("concepts.id"))
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    title: Mapped[str | None] = mapped_column(Text)
+    size: Mapped[int | None] = mapped_column(Integer)
+
+
+class SessionItem(Base):
+    """A question served in a session, in order, with the reason it was chosen."""
+
+    __tablename__ = "session_items"
+    session_id: Mapped[int] = mapped_column(
+        ForeignKey("sessions.id", ondelete="CASCADE"), primary_key=True
+    )
+    position: Mapped[int] = mapped_column(Integer, primary_key=True)
+    question_id: Mapped[int] = mapped_column(ForeignKey("questions.id"))
+    reason: Mapped[str | None] = mapped_column(Text)
 
 
 class Attempt(Base):
@@ -163,10 +183,13 @@ class Attempt(Base):
     session_id: Mapped[int | None] = mapped_column(ForeignKey("sessions.id"))
     question_id: Mapped[int] = mapped_column(ForeignKey("questions.id"))
     chosen_option_id: Mapped[int | None] = mapped_column(ForeignKey("options.id"))
+    chosen_labels: Mapped[str | None] = mapped_column(Text)  # "A" or "A,C" for MSQ
     nat_value: Mapped[Decimal | None] = mapped_column(Numeric)
     is_correct: Mapped[bool] = mapped_column(Boolean)
     time_taken_ms: Mapped[int | None] = mapped_column(Integer)
     confidence: Mapped[int | None] = mapped_column(SmallInteger)
+    mastery_before: Mapped[float | None] = mapped_column(REAL)
+    mastery_after: Mapped[float | None] = mapped_column(REAL)
     answered_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

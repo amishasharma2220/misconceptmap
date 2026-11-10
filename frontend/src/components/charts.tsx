@@ -16,7 +16,7 @@ const AXIS = { fontSize: 11, fill: '#7a8496' }
 const GRID = '#e9edf3'
 const OMR = '#2450b8'
 
-type Datum = Record<string, string | number>
+type Datum = Record<string, string | number | null>
 
 function TooltipBox({
   active,
@@ -107,7 +107,8 @@ export function LineSeries({
         <XAxis dataKey={x} tick={AXIS} axisLine={false} tickLine={false} tickFormatter={xTick} interval="preserveStartEnd" minTickGap={16} />
         <YAxis tick={AXIS} axisLine={false} tickLine={false} tickFormatter={(v) => format(v)} domain={yDomain ?? ['auto', 'auto']} />
         <Tooltip cursor={{ stroke: '#d6dce6' }} content={<TooltipBox format={format} labelFormat={xTick} />} />
-        <Line dataKey={y} stroke={OMR} strokeWidth={2} dot={false} activeDot={{ r: 4, stroke: '#fff', strokeWidth: 2 }} />
+        {/* Days with no data are null: join across them, and mark the real points. */}
+        <Line dataKey={y} stroke={OMR} strokeWidth={2} connectNulls dot={{ r: 2.5, fill: OMR, strokeWidth: 0 }} activeDot={{ r: 4, stroke: '#fff', strokeWidth: 2 }} />
       </LineChart>
     </ResponsiveContainer>
   )

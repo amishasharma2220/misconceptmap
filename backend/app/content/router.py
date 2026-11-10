@@ -41,10 +41,63 @@ from app.tagging.service import DraftOut, TaggingError, draft_tags, record_accep
 router = APIRouter()
 
 
+_TEX = {
+    r"\Theta": "Θ",
+    r"\Omega": "Ω",
+    r"\omega": "ω",
+    r"\theta": "θ",
+    r"\epsilon": "ε",
+    r"\varepsilon": "ε",
+    r"\le": "≤",
+    r"\ge": "≥",
+    r"\leq": "≤",
+    r"\geq": "≥",
+    r"\ne": "≠",
+    r"\neq": "≠",
+    r"\times": "×",
+    r"\cdot": "·",
+    r"\lfloor": "⌊",
+    r"\rfloor": "⌋",
+    r"\lceil": "⌈",
+    r"\rceil": "⌉",
+    r"\infty": "∞",
+    r"\to": "→",
+    r"\in": "∈",
+    r"\sum": "Σ",
+    r"\log": "log",
+    r"\ln": "ln",
+    r"\bmod": "mod",
+    r"\dots": "…",
+    r"\ldots": "…",
+}
+
+
+def _plain_tex(tex: str) -> str:
+    def frac(m: re.Match) -> str:
+        a, b = (x if re.fullmatch(r"\w+", x) else f"({x})" for x in m.groups())
+        return f"{a}/{b}"
+
+    tex = re.sub(r"\\[dt]?frac\{([^{}]*)\}\{([^{}]*)\}", frac, tex)
+    for k in sorted(_TEX, key=len, reverse=True):
+        tex = re.sub(re.escape(k) + r"(?![a-zA-Z])", _TEX[k], tex)
+    tex = re.sub(r"\\(text|mathrm|mathbf|operatorname)\{([^{}]*)\}", r"\2", tex)
+    # x^{n+1} -> x^(n+1), but x^{2} -> x^2
+    tex = re.sub(r"([\^_])\{([^{}]{1})\}", r"\1\2", tex)
+    tex = re.sub(r"([\^_])\{([^{}]*)\}", r"\1(\2)", tex)
+    tex = tex.replace("\\left", "").replace("\\right", "").replace("\\,", " ")
+    return re.sub(r"\\([a-zA-Z]+)", r"\1", tex).replace("{", "").replace("}", "")
+
+
 def plain_preview(md: str, limit: int = 140) -> str:
     """One line of readable text from Markdown + LaTeX, for list views."""
-    text = re.sub(r"\$\$?([^$]*)\$\$?", r"\1", md)  # $x$ / $$x$$ -> x
-    text = re.sub(r"[*_`#>]+", "", text)
+    text = re.sub(r"```.*?(```|$)", " [code] ", md, flags=re.S)
+    text = re.sub(r"\$\$?([^$]*)\$\$?", lambda m: _plain_tex(m.group(1)), text)
+    text = re.sub(r"(?m)^\s*(#+|>)\s*", "", text)  # headings, block quotes
+    # strip emphasis markers outside inline code; keep code text as it is
+    parts = re.split(r"(`[^`]*`)", text)
+    text = "".join(
+        p[1:-1] if p.startswith("`") else re.sub(r"\*+|(?<!\w)_|_(?!\w)", "", p) for p in parts
+    )
     text = " ".join(text.split())
     return text if len(text) <= limit else text[: limit - 1].rstrip() + "…"
 

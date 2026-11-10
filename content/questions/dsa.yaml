@@ -1,0 +1,422 @@
+# Starter DSA questions for MisconceptMap. Original questions written for this project
+# (not copied from GATE papers). Import with:
+#   python -m app.content.questions_loader ../content/questions/dsa.yaml
+# Every wrong option that reflects a known wrong belief points at a misconception below.
+
+misconceptions:
+  - slug: exponent-constant-factor
+    concept: asymptotic-notation
+    title: A constant multiplying the exponent can be dropped
+    explanation: |
+      Only an *added* constant in the exponent becomes a constant factor:
+      $2^{n+1} = 2 \cdot 2^n$. A constant *multiplying* the exponent changes the base:
+      $2^{2n} = 4^n$, which grows faster than $2^n$ by an unbounded factor $2^n$.
+    example: "2^(2n) is not O(2^n), but 2^(n+1) is."
+
+  - slug: recursion-counting-calls
+    concept: recurrence-relations
+    title: Counting recursive calls instead of total work
+    explanation: |
+      The running time is the sum of the work done in every call, not the number of calls.
+      $T(n) = T(n-1) + n$ makes $n$ calls, but the calls do $n, n-1, \dots, 1$ work,
+      which adds up to $\Theta(n^2)$.
+
+  - slug: recursion-assumes-nlogn
+    concept: recurrence-relations
+    title: Assuming a recursive algorithm is n log n
+    explanation: |
+      $\Theta(n \log n)$ comes from recursion that halves the input with linear work per level.
+      Shrinking the input by 1 each time gives $n$ levels, not $\log n$.
+
+  - slug: master-case1-not-polynomial
+    concept: master-theorem
+    title: Any f(n) smaller than n^(log_b a) is case 1
+    explanation: |
+      Case 1 needs $f(n) = O(n^{\log_b a - \varepsilon})$ for some $\varepsilon > 0$: smaller by
+      a *polynomial* factor. $n/\log n$ is smaller than $n$ only by a log factor, so case 1 does
+      not apply, and neither do cases 2 or 3.
+
+  - slug: master-drop-log-factor
+    concept: master-theorem
+    title: Ignoring log factors when matching f(n) to a case
+    explanation: |
+      $n/\log n$ is not $\Theta(n)$: the ratio $n \big/ (n/\log n) = \log n$ is unbounded.
+      Treating them as equal puts the recurrence in case 2 and gives the wrong answer.
+
+  - slug: c-column-major
+    concept: arrays-pointers
+    title: C stores 2-D arrays column by column
+    explanation: |
+      C uses row-major order: all of row 0, then all of row 1, and so on. For `int a[R][C]`,
+      element `a[i][j]` is at offset `(i*C + j) * sizeof(int)` bytes from the start.
+
+  - slug: offset-without-element-size
+    concept: arrays-pointers
+    title: Forgetting to multiply the index by the element size
+    explanation: |
+      An index counts elements, but an address counts bytes. Moving 9 `int`s forward
+      moves $9 \times 4 = 36$ bytes when an `int` is 4 bytes.
+
+  - slug: static-local-reset
+    concept: recursion-c
+    title: A static local is re-initialised on every call
+    explanation: |
+      `static int s = 0;` is initialised once, before the program starts. Every call,
+      recursive or not, shares the same `s`, and its value carries over between calls.
+
+  - slug: tail-pointer-delete-last
+    concept: linked-lists
+    title: A tail pointer makes deleting the last node O(1)
+    explanation: |
+      In a singly linked list the tail pointer reaches the last node, but deleting it means
+      setting the *previous* node's `next` to `NULL` and moving `tail` there. Finding that
+      node needs a walk from the head.
+
+  - slug: postfix-read-as-infix
+    concept: stacks-queues
+    title: Reading postfix left to right as if it were infix
+    explanation: |
+      In postfix, an operator applies to the two most recent values on the stack, not to
+      everything to its left. `2 3 4 * +` is $2 + (3 \times 4)$, not $(2 + 3) \times 4$.
+
+  - slug: postfix-operand-order
+    concept: stacks-queues
+    title: Popping operands in the wrong order for - and /
+    explanation: |
+      The first value popped is the *right* operand. For `a b -`, pop `b`, then pop `a`,
+      and compute `a - b`.
+
+  - slug: full-tree-leaves-equal-internal
+    concept: binary-trees
+    title: A full binary tree has as many internal nodes as leaves
+    explanation: |
+      In a binary tree where every internal node has exactly 2 children,
+      $\text{leaves} = \text{internal} + 1$. So $L$ leaves means $L - 1$ internal nodes and
+      $2L - 1$ nodes in total.
+
+  - slug: full-tree-shape-dependent
+    concept: binary-trees
+    title: The node count depends on the tree's shape
+    explanation: |
+      For trees where every internal node has 0 or 2 children, the leaf count alone fixes the
+      total: $n = 2L - 1$, whatever the shape.
+
+  - slug: bst-delete-promote-right
+    concept: binary-search-trees
+    title: Deleting a node with two children promotes its right child
+    explanation: |
+      The replacement must keep the BST order, so it is the in-order successor (smallest key in
+      the right subtree) or the in-order predecessor (largest key in the left subtree), not
+      simply the right child.
+
+  - slug: bst-successor-left-subtree
+    concept: binary-search-trees
+    title: The in-order successor is in the left subtree
+    explanation: |
+      The in-order successor of a node with a right subtree is the **smallest** key in the
+      **right** subtree. The largest key in the left subtree is the predecessor.
+
+  - slug: build-heap-n-log-n
+    concept: binary-heaps
+    title: Build-heap costs n log n because each heapify is O(log n)
+    explanation: |
+      A heapify costs O(height of that node), and most nodes are near the bottom. About $n/2$
+      nodes have height 0, $n/4$ height 1, and so on; the sum
+      $\sum_h \frac{n}{2^{h+1}} \cdot h$ is $O(n)$.
+
+  - slug: collision-overwrites
+    concept: hashing
+    title: On a collision, the new key replaces the old one
+    explanation: |
+      Open addressing never overwrites an occupied slot. It probes further (with linear
+      probing: the next slot, wrapping around) until it finds an empty one.
+
+  - slug: quicksort-always-n-log-n
+    concept: quicksort
+    title: Quicksort is always O(n log n)
+    explanation: |
+      Quicksort is $O(n \log n)$ on average, but with a fixed pivot rule some inputs make every
+      partition maximally unbalanced, giving $\Theta(n^2)$.
+
+  - slug: sorted-input-best-case
+    concept: quicksort
+    title: Already-sorted input is the best case for every sort
+    explanation: |
+      It is for insertion sort, but for quicksort with the first (or last) element as pivot,
+      sorted input splits off one element per partition: the worst case.
+
+  - slug: merge-one-comparison-per-element
+    concept: merge-sort
+    title: Merging needs one comparison per element
+    explanation: |
+      Each comparison outputs one element, but once one list runs out the rest of the other
+      list is copied with no comparisons. The last element never needs one, so the worst case
+      is $m + n - 1$.
+
+questions:
+  - key: dsa-asym-001
+    concept: asymptotic-notation
+    difficulty: 2
+    source: original
+    stem: |
+      Let $f(n) = 2^{n+1}$ and $g(n) = 2^{2n}$. Which statement is correct?
+    options:
+      - text: Both $f(n)$ and $g(n)$ are $O(2^n)$
+        misconception: exponent-constant-factor
+      - text: $f(n)$ is $O(2^n)$, but $g(n)$ is not
+        correct: true
+      - text: Neither $f(n)$ nor $g(n)$ is $O(2^n)$
+      - text: $g(n)$ is $O(2^n)$, but $f(n)$ is not
+    explanation: |
+      $f(n) = 2 \cdot 2^n$, a constant times $2^n$, so $f(n) = O(2^n)$.
+      $g(n) = (2^2)^n = 4^n$, and $4^n / 2^n = 2^n$ is unbounded, so $g(n) \ne O(2^n)$.
+
+  - key: dsa-rec-001
+    concept: recurrence-relations
+    also: [asymptotic-notation]
+    difficulty: 2
+    source: original
+    stem: |
+      Solve $T(n) = T(n-1) + n$ for $n > 1$, with $T(1) = 1$.
+    options:
+      - text: $\Theta(n)$
+        misconception: recursion-counting-calls
+      - text: $\Theta(n \log n)$
+        misconception: recursion-assumes-nlogn
+      - text: $\Theta(n^2)$
+        correct: true
+      - text: $\Theta(2^n)$
+    explanation: |
+      Unrolling: $T(n) = n + (n-1) + \dots + 2 + 1 = \frac{n(n+1)}{2} = \Theta(n^2)$.
+
+  - key: dsa-mt-001
+    concept: master-theorem
+    also: [recurrence-relations]
+    difficulty: 4
+    source: original
+    stem: |
+      What is the solution of $T(n) = 2T(n/2) + \dfrac{n}{\log n}$?
+    options:
+      - text: $\Theta(n \log n)$, by case 2 of the master theorem
+        misconception: master-drop-log-factor
+      - text: $\Theta(n)$, by case 1 of the master theorem
+        misconception: master-case1-not-polynomial
+      - text: $\Theta(n \log \log n)$
+        correct: true
+      - text: $\Theta(n \log^2 n)$
+    explanation: |
+      Here $n^{\log_b a} = n$, and $f(n) = n/\log n$ is smaller than $n$ by only a log factor,
+      so no case of the basic master theorem applies. Use a recursion tree: level $i$ has
+      $2^i$ subproblems of size $n/2^i$, costing
+      $2^i \cdot \frac{n/2^i}{\log(n/2^i)} = \frac{n}{\log n - i}$.
+      Summing over $i = 0, \dots, \log n - 1$ gives $n \sum_{k=1}^{\log n} \frac{1}{k}
+      = n \cdot H_{\log n} = \Theta(n \log \log n)$.
+
+  - key: dsa-arr-001
+    concept: arrays-pointers
+    difficulty: 2
+    source: original
+    stem: |
+      In C, `int a[3][4];` starts at address 1000 and an `int` is 4 bytes.
+      What is the address of `a[2][1]`?
+    options:
+      - text: "1036"
+        correct: true
+      - text: "1020"
+        misconception: c-column-major
+      - text: "1009"
+        misconception: offset-without-element-size
+      - text: "1032"
+    explanation: |
+      Row-major order: `a[2][1]` comes after 2 full rows of 4 elements plus 1 element,
+      so it is element $2 \times 4 + 1 = 9$. Its address is $1000 + 9 \times 4 = 1036$.
+
+  - key: dsa-recc-001
+    concept: recursion-c
+    difficulty: 3
+    source: original
+    stem: |
+      What does this program print?
+
+      ```c
+      #include <stdio.h>
+
+      int f(int n) {
+          static int s = 0;
+          s += n;
+          if (n <= 1) return s;
+          return f(n - 1);
+      }
+
+      int main(void) {
+          printf("%d ", f(3));
+          printf("%d", f(2));
+          return 0;
+      }
+      ```
+    options:
+      - text: "`6 9`"
+        correct: true
+      - text: "`6 3`"
+        misconception: static-local-reset
+      - text: "`1 1`"
+        misconception: static-local-reset
+      - text: "`3 2`"
+    explanation: |
+      `s` is shared by every call. `f(3)` adds 3, 2, 1, so `s` is 6 and it prints 6.
+      `f(2)` then adds 2 and 1 to the same `s`: $6 + 2 + 1 = 9$.
+
+  - key: dsa-ll-001
+    concept: linked-lists
+    difficulty: 2
+    source: original
+    stem: |
+      A singly linked list of $n$ nodes keeps both a `head` and a `tail` pointer.
+      What is the worst-case time to delete the **last** node (and keep `tail` correct)?
+    options:
+      - text: $\Theta(1)$
+        misconception: tail-pointer-delete-last
+      - text: $\Theta(n)$
+        correct: true
+      - text: $\Theta(\log n)$
+      - text: $\Theta(1)$ amortised over many deletions
+    explanation: |
+      After the deletion, the second-last node must have `next = NULL` and `tail` must point at
+      it. Nodes have no back pointers, so finding it means walking from `head`: $\Theta(n)$.
+
+  - key: dsa-stk-001
+    concept: stacks-queues
+    difficulty: 2
+    source: original
+    stem: |
+      Evaluate the postfix expression `2 3 4 * + 5 -`.
+    options:
+      - text: "9"
+        correct: true
+      - text: "15"
+        misconception: postfix-read-as-infix
+      - text: "−9"
+        misconception: postfix-operand-order
+      - text: "21"
+    explanation: |
+      Push 2, 3, 4. `*` pops 4 and 3 and pushes 12. `+` pops 12 and 2 and pushes 14.
+      Push 5. `-` pops 5 (right operand) then 14 (left operand): $14 - 5 = 9$.
+
+  - key: dsa-bt-001
+    concept: binary-trees
+    difficulty: 3
+    source: original
+    stem: |
+      In a binary tree, every node has either 0 or 2 children. The tree has 20 leaves.
+      How many nodes does it have in total?
+    options:
+      - text: "39"
+        correct: true
+      - text: "40"
+        misconception: full-tree-leaves-equal-internal
+      - text: "19"
+      - text: It depends on the shape of the tree
+        misconception: full-tree-shape-dependent
+    explanation: |
+      Count edges two ways. Every node except the root has one parent edge: $n - 1$ edges.
+      Every internal node has 2 child edges: $2I$ edges. So $n - 1 = 2I$, and with
+      $n = I + L$ this gives $I = L - 1 = 19$, so $n = 19 + 20 = 39$.
+
+  - key: dsa-bst-001
+    concept: binary-search-trees
+    also: [binary-trees]
+    difficulty: 3
+    source: original
+    stem: |
+      Insert 50, 30, 70, 20, 40, 60, 80 (in that order) into an empty binary search tree.
+      Then delete 50, replacing it with its **in-order successor**. What is the new root?
+    options:
+      - text: "60"
+        correct: true
+      - text: "40"
+        misconception: bst-successor-left-subtree
+      - text: "70"
+        misconception: bst-delete-promote-right
+      - text: "30"
+    explanation: |
+      50 is the root with two children. Its in-order successor is the smallest key in its
+      right subtree: go to 70, then left as far as possible, reaching 60. 60 replaces 50,
+      and 60's old position (a leaf) is removed.
+
+  - key: dsa-heap-001
+    concept: binary-heaps
+    difficulty: 3
+    source: original
+    stem: |
+      What is the worst-case time to build a binary max-heap from an unsorted array of $n$
+      elements using bottom-up heapify (calling heapify on nodes $\lfloor n/2 \rfloor$ down to 1)?
+    options:
+      - text: $\Theta(n \log n)$
+        misconception: build-heap-n-log-n
+      - text: $\Theta(n)$
+        correct: true
+      - text: $\Theta(\log n)$
+      - text: $\Theta(n^2)$
+    explanation: |
+      Heapify at a node of height $h$ costs $O(h)$. At most $\lceil n/2^{h+1} \rceil$ nodes
+      have height $h$, so the total is $\sum_{h \ge 0} \frac{n}{2^{h+1}} \cdot O(h) = O(n)$,
+      because $\sum h/2^h$ converges. Some inputs need that much work, so it is $\Theta(n)$.
+
+  - key: dsa-hash-001
+    concept: hashing
+    difficulty: 3
+    source: original
+    stem: |
+      A hash table has 7 slots (0–6), uses $h(k) = k \bmod 7$ and linear probing.
+      Starting empty, the keys 10, 17, 24, 3 are inserted in that order.
+      In which slot does 3 end up?
+    options:
+      - text: Slot 3
+        misconception: collision-overwrites
+      - text: Slot 4
+      - text: Slot 6
+        correct: true
+      - text: Slot 0
+    explanation: |
+      All four keys hash to 3. 10 goes to slot 3. 17 finds 3 full and goes to 4.
+      24 tries 3 and 4 and goes to 5. 3 tries 3, 4 and 5 and goes to 6.
+
+  - key: dsa-qs-001
+    concept: quicksort
+    also: [comparison-sorting]
+    difficulty: 2
+    source: original
+    stem: |
+      Quicksort always picks the **first** element as the pivot. What is its running time on an
+      array of $n$ distinct keys that is already sorted in increasing order?
+    options:
+      - text: $\Theta(n \log n)$
+        misconception: quicksort-always-n-log-n
+      - text: $\Theta(n^2)$
+        correct: true
+      - text: $\Theta(n)$
+        misconception: sorted-input-best-case
+      - text: $\Theta(\log n)$
+    explanation: |
+      The pivot is the smallest key, so each partition leaves 0 elements on one side and all
+      the others on the other. Partitioning costs $n-1, n-2, \dots, 1$ comparisons:
+      $\Theta(n^2)$ in total.
+
+  - key: dsa-ms-001
+    concept: merge-sort
+    difficulty: 2
+    source: original
+    stem: |
+      Two sorted lists have $m$ and $n$ elements ($m, n \ge 1$). What is the maximum number of
+      comparisons the standard merge step makes?
+    options:
+      - text: $m + n - 1$
+        correct: true
+      - text: $m + n$
+        misconception: merge-one-comparison-per-element
+      - text: $\max(m, n)$
+      - text: $m \cdot n$
+    explanation: |
+      Each comparison outputs one element. When one list empties, the rest of the other list is
+      copied without comparisons, so at least one element is never compared at the end.
+      The worst case (the lists interleave until the end) uses $m + n - 1$.

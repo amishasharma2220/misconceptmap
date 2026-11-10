@@ -3,34 +3,18 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCoachScreen } from '../../coach/CoachContext'
 import { BarSeries } from '../../components/charts'
-import { MasteryBar, Panel, pct, SampleDataNote, Sparkline } from '../../components/ui'
+import { EmptyNote, MasteryBar, Panel, pct, Sparkline } from '../../components/ui'
 import { useStudent } from '../../data/student'
 import type { StudentConcept, SubjectCode } from '../../data/types'
 
 type SortKey = 'name' | 'mastery' | 'attempts' | 'accuracy' | 'lastPractisedDays'
-
-// Sample breakdowns until analytics endpoints exist.
-const BY_DIFFICULTY = [
-  { level: 'Level 1', accuracy: 0.86 },
-  { level: 'Level 2', accuracy: 0.74 },
-  { level: 'Level 3', accuracy: 0.61 },
-  { level: 'Level 4', accuracy: 0.47 },
-  { level: 'Level 5', accuracy: 0.32 },
-]
-const TIME_BUCKETS = [
-  { bucket: '< 30s', questions: 96 },
-  { bucket: '30–60s', questions: 212 },
-  { bucket: '1–2 min', questions: 431 },
-  { bucket: '2–3 min', questions: 288 },
-  { bucket: '3–5 min', questions: 142 },
-  { bucket: '> 5 min', questions: 41 },
-]
 
 export function AnalyticsPage() {
   const { data } = useStudent()
   const [subject, setSubject] = useState<SubjectCode | 'ALL'>('ALL')
   const [sort, setSort] = useState<{ key: SortKey; asc: boolean }>({ key: 'mastery', asc: true })
   useCoachScreen({ label: 'Analytics' })
+  const fresh = data.totals.answered === 0
 
   const rows = useMemo(() => {
     const value = (c: StudentConcept) => {
@@ -49,6 +33,7 @@ export function AnalyticsPage() {
 
   const misFreq = [...data.misconceptions]
     .filter((m) => subject === 'ALL' || data.concepts.find((c) => c.slug === m.concept)?.subject === subject)
+    .filter((m) => m.hits > 0)
     .sort((a, b) => b.hits - a.hits)
     .map((m) => ({ title: m.title.length > 30 ? m.title.slice(0, 29) + '…' : m.title, hits: m.hits }))
 
@@ -79,9 +64,6 @@ export function AnalyticsPage() {
               {code === 'ALL' ? 'All subjects' : code}
             </button>
           ))}
-        </div>
-        <div className="ml-auto">
-          <SampleDataNote />
         </div>
       </div>
 
@@ -125,17 +107,25 @@ export function AnalyticsPage() {
         </Panel>
 
         <div className="space-y-4">
-          <Panel title="Accuracy by difficulty">
-            <BarSeries data={BY_DIFFICULTY} x="level" y="accuracy" format={(v) => pct(v)} yMax={1} height={170} />
+          <Panel title="Accuracy by difficulty" action={<span className="text-xs text-ink-soft">all subjects</span>}>
+            {fresh ? (
+              <EmptyNote>Shows how your accuracy drops as questions get harder.</EmptyNote>
+            ) : (
+              <BarSeries data={data.byDifficulty} x="level" y="accuracy" format={(v) => pct(v)} yMax={1} height={170} />
+            )}
           </Panel>
-          <Panel title="Time per question">
-            <BarSeries data={TIME_BUCKETS} x="bucket" y="questions" height={170} />
+          <Panel title="Time per question" action={<span className="text-xs text-ink-soft">all subjects</span>}>
+            {fresh ? (
+              <EmptyNote>Shows how long you take per question, against the GATE pace of about 3 minutes.</EmptyNote>
+            ) : (
+              <BarSeries data={data.timeBuckets} x="bucket" y="questions" height={170} />
+            )}
           </Panel>
           <Panel title="Misconception frequency">
             {misFreq.length ? (
               <BarSeries data={misFreq} x="title" y="hits" horizontal color="#b42347" height={Math.max(120, misFreq.length * 30)} format={(v) => `${v}×`} />
             ) : (
-              <p className="text-sm text-ink-soft">No misconceptions recorded in this subject yet.</p>
+              <EmptyNote>No misconceptions recorded{subject === 'ALL' ? '' : ' in this subject'} yet.</EmptyNote>
             )}
           </Panel>
         </div>

@@ -1,4 +1,4 @@
-// Sample data for the student screens until the practice/analytics endpoints exist.
+// A sample student, used by the landing page (demo question, previews) and by tests.
 // Deterministic (seeded), so screenshots and tests are stable.
 import type {
   DailyActivity,
@@ -143,7 +143,7 @@ const misconceptions: StudentMisconception[] = [
   { id: 9, slug: 'lru-belady', title: 'Expects Belady’s anomaly under LRU', explanation: 'LRU is a stack algorithm, so adding frames never increases faults; the anomaly happens with FIFO.', concept: 'page-replacement', hits: 2, lastSeenDays: 5 },
 ]
 
-const questions: PracticeQuestion[] = [
+export const sampleQuestions: PracticeQuestion[] = [
   {
     id: 101, subject: 'DSA', concept: 'sorting-stability-inplace', alsoTests: ['heap-sort', 'quicksort'], source: 'GATE-style, original', difficulty: 2,
     stem: 'An array of $n$ records is sorted by key. Which algorithm **always** keeps records with equal keys in their original relative order?',
@@ -232,13 +232,13 @@ const daily: DailyActivity[] = Array.from({ length: 30 }, (_, i) => {
 })
 
 const sessions: SessionRecord[] = [
-  { id: 41, date: days(0), subject: 'DSA', mode: 'Adaptive', questions: 12, correct: 8, minutes: 21, masteryDelta: 0.04 },
-  { id: 40, date: days(1), subject: 'OS', mode: 'Adaptive', questions: 10, correct: 5, minutes: 19, masteryDelta: -0.02 },
-  { id: 39, date: days(1), subject: 'DSA', mode: 'Review', questions: 6, correct: 4, minutes: 9, masteryDelta: 0.03 },
-  { id: 38, date: days(2), subject: 'DBMS', mode: 'Concept', questions: 8, correct: 5, minutes: 14, masteryDelta: 0.05 },
-  { id: 37, date: days(3), subject: 'DSA', mode: 'Adaptive', questions: 15, correct: 11, minutes: 27, masteryDelta: 0.06 },
-  { id: 36, date: days(4), subject: 'OS', mode: 'Review', questions: 5, correct: 2, minutes: 8, masteryDelta: -0.01 },
-  { id: 35, date: days(5), subject: 'DBMS', mode: 'Adaptive', questions: 10, correct: 7, minutes: 17, masteryDelta: 0.03 },
+  { id: 41, date: days(0), subject: 'DSA', mode: 'Adaptive', title: 'Adaptive session', questions: 12, correct: 8, minutes: 21, masteryDelta: 0.04 },
+  { id: 40, date: days(1), subject: 'OS', mode: 'Adaptive', title: 'Adaptive session', questions: 10, correct: 5, minutes: 19, masteryDelta: -0.02 },
+  { id: 39, date: days(1), subject: 'DSA', mode: 'Review', title: 'Review', questions: 6, correct: 4, minutes: 9, masteryDelta: 0.03 },
+  { id: 38, date: days(2), subject: 'DBMS', mode: 'Concept', title: 'Concept practice', questions: 8, correct: 5, minutes: 14, masteryDelta: 0.05 },
+  { id: 37, date: days(3), subject: 'DSA', mode: 'Adaptive', title: 'Adaptive session', questions: 15, correct: 11, minutes: 27, masteryDelta: 0.06 },
+  { id: 36, date: days(4), subject: 'OS', mode: 'Review', title: 'Review', questions: 5, correct: 2, minutes: 8, masteryDelta: -0.01 },
+  { id: 35, date: days(5), subject: 'DBMS', mode: 'Adaptive', title: 'Adaptive session', questions: 10, correct: 7, minutes: 17, masteryDelta: 0.03 },
 ]
 
 const review: ReviewItem[] = [
@@ -260,7 +260,9 @@ export const sample: StudentSnapshot = {
   ],
   concepts,
   misconceptions,
-  questions,
+  questions: sampleQuestions.map(({ id, subject, concept, alsoTests, difficulty, source, stem }) => ({
+    id, subject, concept, alsoTests, difficulty, source, stem,
+  })),
   sessions,
   daily,
   review,
@@ -270,5 +272,20 @@ export const sample: StudentSnapshot = {
     streakDays: 9,
     avgSecondsPerQuestion: 102,
   },
+  byDifficulty: [
+    { level: 'Level 1', questions: 182, accuracy: 0.86 },
+    { level: 'Level 2', questions: 341, accuracy: 0.74 },
+    { level: 'Level 3', questions: 402, accuracy: 0.61 },
+    { level: 'Level 4', questions: 207, accuracy: 0.47 },
+    { level: 'Level 5', questions: 78, accuracy: 0.32 },
+  ],
+  timeBuckets: [
+    { bucket: '< 30s', questions: 96 },
+    { bucket: '30–60s', questions: 212 },
+    { bucket: '1–2 min', questions: 431 },
+    { bucket: '2–3 min', questions: 288 },
+    { bucket: '3–5 min', questions: 142 },
+    { bucket: '> 5 min', questions: 41 },
+  ],
   gateDate: GATE_DATE,
 }

@@ -1,5 +1,5 @@
 // Small shared building blocks for the app screens.
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 
 export const btn = {
@@ -18,12 +18,14 @@ export function Panel({
   children,
   className = '',
   bodyClass = 'p-4',
+  bodyStyle,
 }: {
   title?: ReactNode
   action?: ReactNode
   children: ReactNode
   className?: string
   bodyClass?: string
+  bodyStyle?: CSSProperties
 }) {
   return (
     <section className={`flex min-w-0 flex-col rounded-lg border border-rule bg-sheet ${className}`}>
@@ -33,7 +35,9 @@ export function Panel({
           {action && <div className="shrink-0 text-sm">{action}</div>}
         </header>
       )}
-      <div className={`min-h-0 flex-1 ${bodyClass}`}>{children}</div>
+      <div className={`min-h-0 flex-1 ${bodyClass}`} style={bodyStyle}>
+        {children}
+      </div>
     </section>
   )
 }
@@ -172,10 +176,12 @@ export function Chip({ children, tone = 'plain' }: { children: ReactNode; tone?:
   )
 }
 
-export function SampleDataNote() {
+/** Shown in place of a chart or list before the student has practised. */
+export function EmptyNote({ children, action }: { children: ReactNode; action?: ReactNode }) {
   return (
-    <p className="text-xs text-ink-faint">
-      Showing sample data. Your own numbers appear once practice sessions are saved.
-    </p>
+    <div className="flex flex-col items-start gap-3 rounded-md border border-dashed border-rule bg-paper/60 px-4 py-5 text-sm text-ink-soft">
+      <p>{children}</p>
+      {action}
+    </div>
   )
 }

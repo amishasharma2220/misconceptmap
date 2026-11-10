@@ -6,7 +6,7 @@ import { Bubble } from '../components/Bubble'
 import { Logo } from '../components/Logo'
 import { Markdown } from '../components/Markdown'
 import { MasteryBar, masteryTone, pct, toneBg, toneText } from '../components/ui'
-import { sample } from '../data/sample'
+import { sample, sampleQuestions } from '../data/sample'
 import { daysUntil } from '../data/student'
 import type { OptionLabel } from '../data/types'
 import { bktUpdate } from './student/practiceLogic'
@@ -129,7 +129,7 @@ const DEMO_IDS = [101, 102, 104]
 function TryIt() {
   const [qi, setQi] = useState(0)
   const [picked, setPicked] = useState<OptionLabel | null>(null)
-  const q = sample.questions.find((x) => x.id === DEMO_IDS[qi])!
+  const q = sampleQuestions.find((x) => x.id === DEMO_IDS[qi])!
   const concept = sample.concepts.find((c) => c.slug === q.concept)!
   const before = concept.mastery ?? 0.3
   const choice = picked ? q.options.find((o) => o.label === picked)! : null

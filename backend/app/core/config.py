@@ -15,6 +15,10 @@ class Settings(BaseSettings):
     llm_api_key: str = ""
     llm_model: str = "gemini-2.5-flash"
 
+    # Shown as the countdown on the dashboard. Set GATE_DATE in .env once the official
+    # GATE 2027 schedule is announced.
+    gate_date: str = "2027-02-06"
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]

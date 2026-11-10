@@ -37,4 +37,8 @@ export type ScreenContext = {
   answered?: boolean
   pickedLabel?: string
   concept?: string
+  /** after answering: the outcome, so the coach can explain it */
+  correct?: boolean
+  explanation?: string
+  misconception?: { title: string; explanation: string }
 }

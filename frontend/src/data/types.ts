@@ -1,7 +1,8 @@
-// Shapes for the student-facing screens. The backend will return these same shapes;
-// until those endpoints exist, src/data/sample.ts provides realistic sample values.
+// Shapes for the student-facing screens, as returned by GET /me/snapshot.
+// src/data/sample.ts holds a sample student in the same shape for the landing page and tests.
 
-export type SubjectCode = 'DSA' | 'OS' | 'DBMS'
+/** Subject code from the backend, e.g. 'DSA'. */
+export type SubjectCode = string
 
 export type Subject = { code: SubjectCode; name: string; short: string }
 
@@ -28,11 +29,23 @@ export type StudentMisconception = {
   example?: string
   concept: string
   hits: number
-  lastSeenDays: number
+  lastSeenDays: number | null
 }
 
-export type OptionLabel = 'A' | 'B' | 'C' | 'D'
+export type OptionLabel = 'A' | 'B' | 'C' | 'D' | 'E'
 
+/** A question as listed in the snapshot: no options, no answer. */
+export type QuestionPreview = {
+  id: number
+  subject: SubjectCode
+  concept: string
+  alsoTests: string[]
+  difficulty: number | null
+  source: string | null
+  stem: string
+}
+
+/** A complete question with answers; only used by the landing-page demo. */
 export type PracticeQuestion = {
   id: number
   subject: SubjectCode
@@ -50,21 +63,24 @@ export type SessionRecord = {
   id: number
   date: string
   subject: SubjectCode
-  mode: 'Adaptive' | 'Review' | 'Concept'
+  mode: 'Adaptive' | 'Review' | 'Concept' | 'Set'
+  title: string
   questions: number
   correct: number
   minutes: number
   masteryDelta: number
 }
 
-export type DailyActivity = { date: string; questions: number; accuracy: number }
+/** accuracy is null on days with no questions answered */
+export type DailyActivity = { date: string; questions: number; accuracy: number | null }
 
 export type ReviewItem = {
   questionId: number
   stem: string
   concept: string
   timesWrong: number
-  lastAnsweredDays: number
+  lastAnsweredDays: number | null
+  /** negative = overdue */
   dueInHours: number
 }
 
@@ -72,7 +88,7 @@ export type StudentSnapshot = {
   subjects: Subject[]
   concepts: StudentConcept[]
   misconceptions: StudentMisconception[]
-  questions: PracticeQuestion[]
+  questions: QuestionPreview[]
   sessions: SessionRecord[]
   daily: DailyActivity[]
   review: ReviewItem[]
@@ -80,7 +96,9 @@ export type StudentSnapshot = {
     answered: number
     answeredThisWeek: number
     streakDays: number
-    avgSecondsPerQuestion: number
+    avgSecondsPerQuestion: number | null
   }
+  byDifficulty: { level: string; questions: number; accuracy: number | null }[]
+  timeBuckets: { bucket: string; questions: number }[]
   gateDate: string
 }

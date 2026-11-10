@@ -1,6 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { sample } from '../../data/sample'
-import { bktUpdate, formatClock, pickQuestions } from './practiceLogic'
+import { bktUpdate, dueLabel, formatClock, sessionRequest } from './practiceLogic'
 
 describe('bktUpdate', () => {
   test('a correct answer raises mastery and a wrong one lowers it', () => {
@@ -21,21 +20,26 @@ describe('bktUpdate', () => {
   })
 })
 
-describe('pickQuestions', () => {
-  test('explicit ids keep their order and skip unknown ones', () => {
-    const { questions } = pickQuestions(sample.questions, new URLSearchParams('q=103,999,101'))
-    expect(questions.map((q) => q.id)).toEqual([103, 101])
+describe('sessionRequest', () => {
+  const req = (q: string) => sessionRequest(new URLSearchParams(q))
+  test('explicit ids become a questions session, ignoring junk', () => {
+    expect(req('q=103,x,101')).toEqual({ mode: 'questions', questions: [103, 101] })
   })
+  test('concept, review and subject', () => {
+    expect(req('concept=heap-sort')).toMatchObject({ mode: 'concept', concept: 'heap-sort' })
+    expect(req('mode=review&subject=DSA')).toMatchObject({ mode: 'review', subject: 'DSA' })
+    expect(req('subject=OS')).toMatchObject({ mode: 'adaptive', subject: 'OS' })
+  })
+  test('defaults to adaptive', () => {
+    expect(req('')).toEqual({ mode: 'adaptive', subject: undefined, size: 10 })
+  })
+})
 
-  test('a concept picks questions that test it, primary or secondary', () => {
-    const { questions, title } = pickQuestions(sample.questions, new URLSearchParams('concept=heap-sort'))
-    expect(title).toBe('Concept practice')
-    expect(questions.every((q) => q.concept === 'heap-sort' || q.alsoTests.includes('heap-sort'))).toBe(true)
-  })
-
-  test('falls back to the adaptive set', () => {
-    expect(pickQuestions(sample.questions, new URLSearchParams()).questions).toHaveLength(sample.questions.length)
-  })
+test('dueLabel', () => {
+  const now = Date.parse('2026-11-10T09:00:00Z')
+  expect(dueLabel('2026-11-11T09:00:00Z', now)).toBe('tomorrow')
+  expect(dueLabel('2026-11-13T09:00:00Z', now)).toBe('in 3 days')
+  expect(dueLabel('2026-11-10T14:00:00Z', now)).toBe('in 5 hours')
 })
 
 test('formatClock pads seconds', () => {

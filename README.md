@@ -31,6 +31,7 @@ pip install -r requirements.txt
 cp .env.example .env
 alembic upgrade head
 python -m app.content.loader ../content/concepts/dsa.yaml
+python -m app.content.questions_loader ../content/questions/dsa.yaml
 uvicorn app.main:app --reload
 
 # 3. Frontend (http://localhost:5173)
@@ -56,7 +57,7 @@ Get a free key at <https://aistudio.google.com/apikey>, put it in `backend/.env`
 
 ```bash
 docker compose exec db createdb -U mm misconceptmap_test   # once
-cd backend && pytest -q        # auth, content rules, tagging (fake LLM), loader
+cd backend && pytest -q        # auth, content, tagging, engine, practice API, snapshot
 cd frontend && npm test        # UI tests
 ```
 
@@ -64,11 +65,20 @@ cd frontend && npm test        # UI tests
 
 Concept graphs live in `content/concepts/*.yaml` — one file per subject, each concept with its prerequisites. The loader validates the graph (no duplicates, no unknown prerequisites, no cycles) before writing anything, and is safe to re-run after edits.
 
+Starter questions live in `content/questions/*.yaml`, each wrong option linked to the misconception it reveals. The importer runs every question through the same checks as the admin editor, approves it, and updates in place when re-run (matched by each question's `key`). Questions you write in the admin editor are never touched by it.
+
+## How practice works
+
+- **Choosing questions** (`backend/app/engine/selector.py`): take the weakest concept that still has unseen questions; if one of its prerequisites is below 60% and has questions, practise that prerequisite first. Every question shows the reason it was picked.
+- **Mastery** (`engine/bkt.py`): Bayesian Knowledge Tracing per concept, updated on every answer for every concept the question tests. Numerical questions use a lower guess rate.
+- **Review queue** (`engine/scheduler.py`): a wrong answer comes back in 1 day; correct reviews push it out by a growing interval until it leaves the queue.
+- **Dashboard data** (`GET /me/snapshot`): computed from the append-only attempt log, with mastery history rebuilt by replaying attempts.
+
 ## Layout
 
 ```
 backend/   FastAPI app, models, Alembic migrations, tests
 frontend/  React app
-content/   concept graphs (and later, approved questions)
+content/   concept graphs and starter questions
 ml/        knowledge-tracing experiments
 ```

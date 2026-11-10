@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext'
 import { useCoachScreen } from '../../coach/CoachContext'
@@ -8,14 +9,14 @@ import {
   masteryTone,
   Panel,
   PanelLink,
+  EmptyNote,
   pct,
-  SampleDataNote,
   Stat,
   toneBg,
   toneText,
   toneTint,
 } from '../../components/ui'
-import { subjectMastery, useStudent, weakest } from '../../data/student'
+import { subjectMastery, useStudent, weakest, weightedAccuracy } from '../../data/student'
 
 function greeting() {
   const h = new Date().getHours()
@@ -31,10 +32,18 @@ export function DashboardPage() {
   const started = data.concepts.filter((c) => c.mastery != null)
   const mastered = data.concepts.filter((c) => (c.mastery ?? 0) >= 0.7).length
   const last14 = data.daily.slice(-14)
-  const acc14 = last14.reduce((s, d) => s + d.accuracy * d.questions, 0) / last14.reduce((s, d) => s + d.questions, 0)
+  const acc14 = weightedAccuracy(last14)
+  const accSpark = last14.filter((d) => d.accuracy != null).map((d) => d.accuracy!)
   const due = data.review.filter((r) => r.dueInHours <= 0)
   const weak = weakest(data.concepts, 6)
-  const topMis = [...data.misconceptions].sort((a, b) => b.hits - a.hits).slice(0, 6)
+  const topMis = data.misconceptions.filter((m) => m.hits > 0).sort((a, b) => b.hits - a.hits).slice(0, 6)
+  const fresh = data.totals.answered === 0
+  const avg = data.totals.avgSecondsPerQuestion
+  const startFirst = (
+    <Link to="/practice" className={btn.primary}>
+      Start your first session
+    </Link>
+  )
 
   return (
     <div className="mx-auto max-w-[1600px] space-y-4">
@@ -44,20 +53,33 @@ export function DashboardPage() {
             {greeting()}, {user?.display_name?.split(' ')[0] ?? 'there'}
           </p>
           <p className="text-sm text-ink-soft">
-            {due.length} questions due for review, and {weak[0]?.name} is your weakest prerequisite.
+            {fresh
+              ? 'Answer your first questions and this page fills in with your own numbers.'
+              : [
+                  `${due.length} question${due.length === 1 ? '' : 's'} due for review`,
+                  weak[0] && `${weak[0].name} is your weakest concept`,
+                ]
+                  .filter(Boolean)
+                  .join(', and ') + '.'}
           </p>
         </div>
-        <SampleDataNote />
+        <Link to="/practice" className={btn.primary}>
+          {fresh ? 'Start your first session' : 'Start practice'}
+        </Link>
       </div>
 
       {/* row 1: stats */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         <Stat label="Questions answered" value={data.totals.answered.toLocaleString('en-IN')} sub={`+${data.totals.answeredThisWeek} this week`} spark={data.daily.slice(-14).map((d) => d.questions)} />
-        <Stat label="Accuracy, last 14 days" value={pct(acc14)} sub="weighted by questions" spark={last14.map((d) => d.accuracy)} />
+        <Stat label="Accuracy, last 14 days" value={pct(acc14)} sub="weighted by questions" spark={accSpark.length > 1 ? accSpark : undefined} />
         <Stat label="Concepts mastered" value={`${mastered}/${data.concepts.length}`} sub={`${started.length} started`} />
         <Stat label="Review due now" value={due.length} sub={<Link to="/review" className="text-omr hover:underline">Open review queue</Link>} />
-        <Stat label="Study streak" value={`${data.totals.streakDays} days`} sub="practised every day" />
-        <Stat label="Avg time per question" value={`${Math.floor(data.totals.avgSecondsPerQuestion / 60)}m ${data.totals.avgSecondsPerQuestion % 60}s`} sub="GATE pace: about 2m 45s" />
+        <Stat
+          label="Study streak"
+          value={`${data.totals.streakDays} ${data.totals.streakDays === 1 ? 'day' : 'days'}`}
+          sub={data.totals.streakDays ? 'practised every day' : 'practise today to start one'}
+        />
+        <Stat label="Avg time per question" value={avg == null ? '—' : `${Math.floor(avg / 60)}m ${avg % 60}s`} sub="GATE pace: about 2m 45s" />
       </div>
 
       {/* row 2 */}
@@ -97,6 +119,11 @@ export function DashboardPage() {
         </Panel>
 
         <Panel className="xl:col-span-4" title="Weakest prerequisites" action={<PanelLink to="/analytics">All concepts</PanelLink>} bodyClass="p-0">
+          {weak.length === 0 && (
+            <div className="p-4">
+              <EmptyNote>Your weakest concepts show up here once you have answered a few questions.</EmptyNote>
+            </div>
+          )}
           <ul className="divide-y divide-rule-soft">
             {weak.map((c, i) => (
               <li key={c.slug} className="flex items-center gap-3 px-4 py-2.5">
@@ -117,12 +144,27 @@ export function DashboardPage() {
       {/* row 3 */}
       <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-12">
         <Panel className="xl:col-span-4" title="Questions per day" action={<span className="text-xs text-ink-soft">last 30 days</span>}>
-          <BarSeries data={data.daily} x="date" y="questions" xTick={shortDate} height={250} />
+          {fresh ? (
+            <EmptyNote action={startFirst}>No questions answered yet.</EmptyNote>
+          ) : (
+            <BarSeries data={data.daily} x="date" y="questions" xTick={shortDate} height={250} />
+          )}
         </Panel>
         <Panel className="xl:col-span-4" title="Daily accuracy" action={<span className="text-xs text-ink-soft">last 30 days</span>}>
-          <LineSeries data={data.daily} x="date" y="accuracy" xTick={shortDate} format={(v) => pct(v)} yDomain={[0.4, 0.9]} height={250} />
+          {fresh ? (
+            <EmptyNote>Your accuracy for each day you practise appears here.</EmptyNote>
+          ) : (
+            <LineSeries data={data.daily} x="date" y="accuracy" xTick={shortDate} format={(v) => pct(v)} yDomain={[0, 1]} height={250} />
+          )}
         </Panel>
         <Panel className="lg:col-span-2 xl:col-span-4" title="Misconceptions you keep hitting" bodyClass="p-0">
+          {topMis.length === 0 && (
+            <div className="p-4">
+              <EmptyNote>
+                When you pick a wrong option, the belief behind it is named here, so you can see which ones keep coming back.
+              </EmptyNote>
+            </div>
+          )}
           <ul className="divide-y divide-rule-soft">
             {topMis.map((m) => (
               <li key={m.id} className="flex items-start gap-3 px-4 py-2">
@@ -143,12 +185,17 @@ export function DashboardPage() {
       {/* row 4 */}
       <div className="grid gap-4 xl:grid-cols-12">
         <Panel className="xl:col-span-8" title="Recent sessions" bodyClass="overflow-x-auto p-0">
+          {data.sessions.length === 0 ? (
+            <div className="p-4">
+              <EmptyNote action={startFirst}>Your practice sessions will be listed here.</EmptyNote>
+            </div>
+          ) : (
           <table className="w-full min-w-[560px] text-left text-sm">
             <thead className="text-xs text-ink-soft">
               <tr className="border-b border-rule-soft">
                 <th className="px-4 py-2 font-normal">Date</th>
                 <th className="px-2 py-2 font-normal">Subject</th>
-                <th className="px-2 py-2 font-normal">Mode</th>
+                <th className="px-2 py-2 font-normal">Session</th>
                 <th className="px-2 py-2 text-right font-normal">Questions</th>
                 <th className="px-2 py-2 text-right font-normal">Accuracy</th>
                 <th className="px-2 py-2 text-right font-normal">Time</th>
@@ -160,7 +207,11 @@ export function DashboardPage() {
                 <tr key={s.id} className={i % 2 ? 'bg-paper/60' : ''}>
                   <td className="px-4 py-2">{shortDate(s.date)}</td>
                   <td className="px-2 py-2">{s.subject}</td>
-                  <td className="px-2 py-2 text-ink-soft">{s.mode}</td>
+                  <td className="px-2 py-2 text-ink-soft">
+                    <Link to={`/practice/summary?session=${s.id}`} className="hover:text-omr hover:underline">
+                      {s.title}
+                    </Link>
+                  </td>
                   <td className="px-2 py-2 text-right">{s.questions}</td>
                   <td className="px-2 py-2 text-right">{pct(s.correct / s.questions)}</td>
                   <td className="px-2 py-2 text-right">{s.minutes} min</td>
@@ -172,9 +223,15 @@ export function DashboardPage() {
               ))}
             </tbody>
           </table>
+          )}
         </Panel>
 
         <Panel className="xl:col-span-4" title="Due for review" action={<PanelLink to="/review">See all</PanelLink>} bodyClass="flex flex-col p-0">
+          {data.review.length === 0 && (
+            <div className="flex-1 p-4">
+              <EmptyNote>Questions you get wrong come back here a day later, then at growing gaps until they stick.</EmptyNote>
+            </div>
+          )}
           <ul className="flex-1 divide-y divide-rule-soft">
             {data.review.slice(0, 5).map((r) => (
               <li key={r.questionId} className="flex items-center justify-between gap-3 px-4 py-2">
@@ -183,27 +240,33 @@ export function DashboardPage() {
                   <p className="text-xs text-ink-soft">{conceptName(r.concept)}</p>
                 </div>
                 <span className={`tnum shrink-0 text-xs ${r.dueInHours <= 0 ? 'font-bold text-pen' : 'text-ink-soft'}`}>
-                  {r.dueInHours <= 0 ? 'Due now' : `in ${r.dueInHours} h`}
+                  {r.dueInHours <= 0 ? 'Due now' : r.dueInHours < 24 ? `in ${r.dueInHours} h` : `in ${Math.round(r.dueInHours / 24)} d`}
                 </span>
               </li>
             ))}
           </ul>
-          <div className="border-t border-rule-soft p-3">
-            <Link to={`/practice?q=${due.map((r) => r.questionId).join(',')}`} className={`${btn.primary} w-full`}>
-              Start review ({due.length})
-            </Link>
-          </div>
+          {due.length > 0 && (
+            <div className="border-t border-rule-soft p-3">
+              <Link to="/practice?mode=review" className={`${btn.primary} w-full`}>
+                Start review ({due.length})
+              </Link>
+            </div>
+          )}
         </Panel>
       </div>
 
       {/* row 5 */}
-      <Panel title="Subject breakdown" bodyClass="grid divide-y divide-rule-soft md:grid-cols-3 md:divide-x md:divide-y-0">
+      <Panel
+        title="Subject breakdown"
+        bodyClass="grid divide-y divide-rule-soft md:grid-cols-[repeat(var(--cols),minmax(0,1fr))] md:divide-x md:divide-y-0"
+        bodyStyle={{ '--cols': Math.min(3, Math.max(1, data.subjects.length)) } as CSSProperties}
+      >
         {data.subjects.map((s) => {
           const cs = inSubject(s.code)
           const m = subjectMastery(cs)
           const attempts = cs.reduce((t, c) => t + c.attempts, 0)
           const accs = cs.filter((c) => c.accuracy != null)
-          const acc = accs.reduce((t, c) => t + c.accuracy!, 0) / (accs.length || 1)
+          const acc = accs.length ? accs.reduce((t, c) => t + c.accuracy!, 0) / accs.length : null
           const weakOne = weakest(cs, 1)[0]
           return (
             <div key={s.code} className="space-y-3 p-4">

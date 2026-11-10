@@ -97,3 +97,79 @@ export type Draft = {
 }
 
 export type ApproveOut = { question: Question; draft_accepted_unchanged: boolean | null }
+
+// ---------------------------------------------------------------- practice sessions
+
+export type SessionMode = 'adaptive' | 'review' | 'concept' | 'questions'
+
+export type SessionIn = {
+  mode: SessionMode
+  subject?: string
+  concept?: string
+  questions?: number[]
+  size?: number
+}
+
+export type QuestionPublic = {
+  id: number
+  qtype: QType
+  subject: string
+  concept: string
+  also_tests: string[]
+  source: string | null
+  difficulty: number | null
+  stem_md: string
+  /** one plain-text line, for tables */
+  preview: string
+  options: { label: Label; text_md: string }[]
+}
+
+export type MisconceptionHit = {
+  label: Label
+  id: number
+  slug: string
+  title: string
+  explanation: string
+  example: string | null
+}
+
+export type AnswerResult = {
+  question_id: number
+  correct: boolean
+  chosen: Label[]
+  nat_value: string | null
+  correct_labels: Label[]
+  nat_answer_min: string | null
+  nat_answer_max: string | null
+  explanation_md: string | null
+  misconceptions: MisconceptionHit[]
+  /** primary concept first */
+  mastery: { concept: string; before: number; after: number }[]
+  review_due_at: string | null
+  time_taken_ms: number | null
+}
+
+export type SessionItem = {
+  position: number
+  reason: string | null
+  question: QuestionPublic
+  result: AnswerResult | null
+}
+
+export type PracticeSessionOut = {
+  id: number
+  mode: string
+  title: string
+  size: number
+  started_at: string
+  ended_at: string | null
+  done: boolean
+  items: SessionItem[]
+}
+
+export type AnswerIn = {
+  question_id: number
+  chosen: Label[]
+  nat_value?: string
+  time_taken_ms?: number
+}

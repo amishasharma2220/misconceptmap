@@ -1,7 +1,10 @@
-// Pure logic for a practice session, kept apart from the UI so it can be unit-tested.
-import type { OptionLabel, PracticeQuestion } from '../../data/types'
+// Pure logic for practice sessions, kept apart from the UI so it can be unit-tested.
+import type { SessionIn } from '../../api/types'
 
-/** Bayesian Knowledge Tracing update (same defaults the backend will use). */
+/**
+ * Bayesian Knowledge Tracing update, same defaults as backend/app/engine/bkt.py.
+ * The server is the source of truth; this powers the landing-page demo.
+ */
 export function bktUpdate(
   p: number,
   correct: boolean,
@@ -13,35 +16,38 @@ export function bktUpdate(
   return Math.min(0.99, posterior + (1 - posterior) * learn)
 }
 
-/** Which questions a session should contain, from the URL. */
-export function pickQuestions(
-  all: PracticeQuestion[],
-  params: URLSearchParams,
-): { questions: PracticeQuestion[]; title: string } {
-  const ids = params.get('q')
-  if (ids) {
-    const wanted = ids.split(',').map(Number)
-    const qs = wanted.map((id) => all.find((q) => q.id === id)).filter((q): q is PracticeQuestion => !!q)
-    if (qs.length) return { questions: qs, title: qs.length === 1 ? 'Single question' : 'Recommended set' }
-  }
+/**
+ * What kind of session to start, from the practice URL:
+ *   /practice?q=12,15         a chosen set of questions
+ *   /practice?concept=slug    one concept
+ *   /practice?mode=review     questions due for review
+ *   /practice?subject=DSA     adaptive, limited to a subject
+ *   /practice                 adaptive across everything
+ */
+export function sessionRequest(params: URLSearchParams): SessionIn {
+  const ids = (params.get('q') ?? '')
+    .split(',')
+    .map(Number)
+    .filter((n) => Number.isInteger(n) && n > 0)
+  if (ids.length) return { mode: 'questions', questions: ids }
   const concept = params.get('concept')
-  if (concept) {
-    const qs = all.filter((q) => q.concept === concept || q.alsoTests.includes(concept))
-    if (qs.length) return { questions: qs, title: 'Concept practice' }
-  }
-  return { questions: all, title: 'Adaptive session' }
-}
-
-export type Answer = { label: OptionLabel; correct: boolean; seconds: number; before: number; after: number }
-
-export type SessionResult = {
-  title: string
-  seconds: number
-  items: { question: PracticeQuestion; answer: Answer | null }[]
+  if (concept) return { mode: 'concept', concept, size: 8 }
+  const subject = params.get('subject') ?? undefined
+  if (params.get('mode') === 'review') return { mode: 'review', subject, size: 15 }
+  return { mode: 'adaptive', subject, size: 10 }
 }
 
 export function formatClock(totalSeconds: number): string {
   const m = Math.floor(totalSeconds / 60)
   const s = totalSeconds % 60
   return `${m}:${s.toString().padStart(2, '0')}`
+}
+
+/** "in 3 days", "tomorrow", "in 5 hours" for a review due date. */
+export function dueLabel(iso: string, now = Date.now()): string {
+  const hours = Math.round((Date.parse(iso) - now) / 36e5)
+  if (hours < 1) return 'now'
+  if (hours < 20) return `in ${hours} hours`
+  const days = Math.round(hours / 24)
+  return days <= 1 ? 'tomorrow' : `in ${days} days`
 }

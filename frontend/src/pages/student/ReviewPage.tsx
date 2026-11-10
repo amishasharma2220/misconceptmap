@@ -2,9 +2,7 @@ import { Play } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCoachScreen } from '../../coach/CoachContext'
-import { Bubble } from '../../components/Bubble'
-import { Markdown } from '../../components/Markdown'
-import { btn, Panel, SampleDataNote } from '../../components/ui'
+import { btn, Chip, EmptyNote, Panel } from '../../components/ui'
 import { useStudent } from '../../data/student'
 import type { SubjectCode } from '../../data/types'
 
@@ -32,6 +30,8 @@ export function ReviewPage() {
   )
   const available = new Set(data.questions.map((q) => q.id))
   const preview = data.questions.find((q) => q.id === previewId)
+  const previewRow = data.review.find((r) => r.questionId === previewId)
+  const dueNow = data.review.filter((r) => r.dueInHours <= 0).length
   const toggle = (id: number) =>
     setSelected((s) => {
       const n = new Set(s)
@@ -60,14 +60,20 @@ export function ReviewPage() {
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={onlyDue} onChange={(e) => setOnlyDue(e.target.checked)} /> Due now only
         </label>
-        <div className="ml-auto flex items-center gap-3">
-          <SampleDataNote />
+        <div className="ml-auto flex flex-wrap items-center gap-2">
           <button
-            className={btn.primary}
+            className={btn.quiet}
             disabled={!startIds.length}
             onClick={() => navigate(`/practice?q=${startIds.join(',')}`)}
           >
-            <Play size={14} /> Review selected ({startIds.length})
+            Review selected ({startIds.length})
+          </button>
+          <button
+            className={btn.primary}
+            disabled={!dueNow}
+            onClick={() => navigate(`/practice?mode=review${subject ? `&subject=${subject}` : ''}`)}
+          >
+            <Play size={14} /> Review all due ({dueNow})
           </button>
         </div>
       </div>
@@ -75,7 +81,13 @@ export function ReviewPage() {
       <div className="grid gap-4 xl:grid-cols-[1.5fr_1fr]">
         <Panel bodyClass="overflow-x-auto p-0">
           {rows.length === 0 ? (
-            <p className="p-8 text-center text-ink-soft">Nothing due. Come back tomorrow, or practise a weak concept.</p>
+            <div className="p-4">
+              <EmptyNote>
+                {data.review.length === 0
+                  ? 'Your review queue is empty. Questions you get wrong come back here a day later, then at growing gaps until you get them right three times.'
+                  : 'Nothing matches these filters.'}
+              </EmptyNote>
+            </div>
           ) : (
             <table className="w-full min-w-[620px] text-left text-sm">
               <thead className="text-xs text-ink-soft">
@@ -113,8 +125,8 @@ export function ReviewPage() {
                     <td className="max-w-xs truncate px-2 py-2">{r.stem}</td>
                     <td className="px-2 py-2 text-ink-soft">{conceptName(r.concept)}</td>
                     <td className="tnum px-2 py-2 text-right text-pen">{r.timesWrong}</td>
-                    <td className="tnum px-2 py-2 text-right text-ink-soft">{r.lastAnsweredDays}d ago</td>
-                    <td className={`tnum px-4 py-2 text-right ${r.dueInHours <= 0 ? 'font-bold text-pen' : 'text-ink-soft'}`}>
+                    <td className="tnum whitespace-nowrap px-2 py-2 text-right text-ink-soft">{r.lastAnsweredDays == null ? '—' : r.lastAnsweredDays === 0 ? 'Today' : `${r.lastAnsweredDays}d ago`}</td>
+                    <td className={`tnum whitespace-nowrap px-4 py-2 text-right ${r.dueInHours <= 0 ? 'font-bold text-pen' : 'text-ink-soft'}`}>
                       {dueLabel(r.dueInHours)}
                     </td>
                   </tr>
@@ -127,21 +139,21 @@ export function ReviewPage() {
         <Panel title="Preview" className="xl:sticky xl:top-20 xl:self-start">
           {preview ? (
             <div className="space-y-3">
-              <Markdown>{preview.stem}</Markdown>
-              <ul className="space-y-1.5">
-                {preview.options.map((o) => (
-                  <li key={o.label} className="flex items-center gap-2 text-sm">
-                    <Bubble label={o.label} filled={false} size="sm" />
-                    <Markdown>{o.text}</Markdown>
-                  </li>
-                ))}
-              </ul>
+              <div className="flex flex-wrap gap-1.5">
+                <Chip tone="omr">{conceptName(preview.concept)}</Chip>
+                {previewRow && <Chip tone="pen">wrong {previewRow.timesWrong}×</Chip>}
+                {preview.difficulty && <Chip>Difficulty {preview.difficulty}/5</Chip>}
+              </div>
+              <p className="text-sm">{preview.stem}</p>
+              <p className="text-xs text-ink-soft">Options are hidden until you answer, so the review is a real test.</p>
               <button className={btn.primary} onClick={() => navigate(`/practice?q=${preview.id}`)}>
                 Answer this now
               </button>
             </div>
           ) : (
-            <p className="text-sm text-ink-soft">This question is not in the sample set yet. Pick another row.</p>
+            <p className="text-sm text-ink-soft">
+              {data.review.length ? 'Pick a row to preview it.' : 'Nothing to preview yet.'}
+            </p>
           )}
         </Panel>
       </div>

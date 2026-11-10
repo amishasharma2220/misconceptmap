@@ -21,7 +21,7 @@ import { CoachProvider, useCoach } from '../coach/CoachContext'
 import { CoachPanel } from '../coach/CoachPanel'
 import { Logo } from '../components/Logo'
 import { btn } from '../components/ui'
-import { daysUntil, useStudent } from '../data/student'
+import { daysUntil, useSnapshotQuery, useStudent } from '../data/student'
 
 const TITLES: [RegExp, string][] = [
   [/^\/home/, 'Dashboard'],
@@ -95,7 +95,9 @@ function Shell() {
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar title={title} onMenu={() => setDrawer(true)} />
         <main id="main" className="min-w-0 flex-1 px-4 py-5 lg:px-6">
-          <Outlet />
+          <StudentDataGate>
+            <Outlet />
+          </StudentDataGate>
         </main>
       </div>
       <CoachPanel />
@@ -284,4 +286,34 @@ function ConceptSearch() {
       )}
     </div>
   )
+}
+
+/** Waits for the first snapshot so every screen can read the student's data directly. */
+function StudentDataGate({ children }: { children: ReactNode }) {
+  const q = useSnapshotQuery()
+  if (q.isPending) {
+    return (
+      <div className="mx-auto max-w-[1400px] space-y-4" aria-busy="true" aria-label="Loading your data">
+        <div className="h-8 w-64 animate-pulse rounded bg-rule-soft" />
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="h-24 animate-pulse rounded-lg bg-rule-soft" />
+          ))}
+        </div>
+        <div className="h-72 animate-pulse rounded-lg bg-rule-soft" />
+      </div>
+    )
+  }
+  if (q.isError) {
+    return (
+      <div role="alert" className="mx-auto max-w-lg rounded-lg border border-pen/30 bg-sheet p-6">
+        <p className="font-bold text-pen">Could not load your data</p>
+        <p className="mt-1 text-sm text-ink-soft">{q.error.message}</p>
+        <button className={`${btn.primary} mt-4`} onClick={() => q.refetch()}>
+          Try again
+        </button>
+      </div>
+    )
+  }
+  return <>{children}</>
 }

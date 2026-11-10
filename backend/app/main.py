@@ -6,6 +6,8 @@ from app.auth.router import router as auth_router
 from app.content.router import router as content_router
 from app.core.config import get_settings
 from app.core.db import DbSession
+from app.practice.router import me_router
+from app.practice.router import router as practice_router
 
 app = FastAPI(title="MisconceptMap API", version="0.2.0")
 
@@ -26,3 +28,5 @@ def health(db: DbSession) -> dict:
 
 app.include_router(auth_router)
 app.include_router(content_router)
+app.include_router(practice_router)
+app.include_router(me_router)

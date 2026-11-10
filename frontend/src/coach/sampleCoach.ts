@@ -1,5 +1,5 @@
 // Stand-in for the coach endpoint: chooses a reply by keyword and screen context, using the
-// student's (sample) data. Replace `sampleReply` with a call to POST /coach when it exists.
+// student's snapshot. Replace `sampleReply` with a call to POST /coach when it exists.
 import { daysUntil, weakest } from '../data/student'
 import type { StudentSnapshot } from '../data/types'
 import type { CoachMessage, PlanDay, RecommendItem, ScreenContext } from './types'
@@ -41,7 +41,7 @@ function recommend(s: StudentSnapshot): RecommendItem[] {
       stem: r.stem,
       concept: name(r.concept),
       reason: `You got this wrong ${r.timesWrong} time${r.timesWrong > 1 ? 's' : ''}`,
-      difficulty: s.questions.find((q) => q.id === r.questionId)!.difficulty,
+      difficulty: s.questions.find((q) => q.id === r.questionId)!.difficulty ?? 3,
     }))
   const used = new Set(fromReview.map((r) => r.questionId))
   const weakSlugs = new Set(weakest(s.concepts, 8).map((c) => c.slug))
@@ -51,8 +51,8 @@ function recommend(s: StudentSnapshot): RecommendItem[] {
       questionId: q.id,
       stem: q.stem.replace(/\$|\*\*/g, ''),
       concept: name(q.concept),
-      reason: q.whyPicked,
-      difficulty: q.difficulty,
+      reason: `Practises ${name(q.concept)}, one of your weakest concepts`,
+      difficulty: q.difficulty ?? 3,
     }))
   return pick([...fromReview, ...fromWeak], 4)
 }
@@ -73,13 +73,12 @@ const id = () => `c${Date.now()}-${n++}`
 
 export function sampleReply(input: string, ctx: ScreenContext, s: StudentSnapshot): CoachMessage {
   const t = input.toLowerCase()
-  const q = ctx.questionId ? s.questions.find((x) => x.id === ctx.questionId) : undefined
   const conceptName = (slug: string) => s.concepts.find((c) => c.slug === slug)?.name ?? slug
 
   // 1. Hints and mistake explanations about the question on screen
-  if (q && /hint|why|wrong|mistake|stuck|explain (this|my)|help/.test(t)) {
-    const picked = q.options.find((o) => o.label === ctx.pickedLabel)
-    const mis = picked?.misconception ? s.misconceptions.find((m) => m.id === picked.misconception) : undefined
+  if (ctx.questionId && ctx.concept && /hint|why|wrong|mistake|stuck|explain (this|my)|help/.test(t)) {
+    const concept = ctx.concept
+    const mis = ctx.misconception
     if (!ctx.answered) {
       return {
         id: id(),
@@ -88,24 +87,26 @@ export function sampleReply(input: string, ctx: ScreenContext, s: StudentSnapsho
         card: {
           kind: 'mistake',
           hintOnly: true,
-          concept: conceptName(q.concept),
-          steps: hintFor(q.concept),
+          concept: conceptName(concept),
+          steps: hintFor(concept),
         },
       }
     }
     return {
       id: id(),
       role: 'coach',
-      text: picked?.correct
+      text: ctx.correct
         ? 'You got this one right. Here is why it works, so it sticks.'
-        : `Let's look at why ${picked ? `option ${picked.label}` : 'that answer'} doesn't work.`,
+        : `Let's look at why ${ctx.pickedLabel ? `option ${ctx.pickedLabel}` : 'that answer'} doesn't work.`,
       card: {
         kind: 'mistake',
         hintOnly: false,
-        concept: conceptName(q.concept),
+        concept: conceptName(concept),
         misconceptionTitle: mis?.title,
-        steps: [...(mis ? [mis.explanation] : []), q.explanation.replace(/\$/g, '')],
-        similarQuestionId: s.questions.find((x) => x.concept !== q.concept && x.subject === q.subject)?.id,
+        steps: [...(mis ? [mis.explanation] : []), ...(ctx.explanation ? [ctx.explanation] : [])],
+        similarQuestionId: s.questions.find(
+          (x) => x.id !== ctx.questionId && (x.concept === concept || x.alsoTests.includes(concept)),
+        )?.id,
       },
     }
   }

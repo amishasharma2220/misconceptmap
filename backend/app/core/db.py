@@ -12,7 +12,14 @@ class Base(DeclarativeBase):
     pass
 
 
-engine = create_engine(get_settings().database_url, pool_pre_ping=True)
+engine = create_engine(
+    get_settings().database_url,
+    # Hosted databases close idle connections: check before use and refresh every 5 minutes.
+    pool_pre_ping=True,
+    pool_recycle=300,
+    # Hosted connection poolers (Neon, Supabase) do not keep server-side prepared statements.
+    connect_args={"prepare_threshold": None},
+)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
 
 

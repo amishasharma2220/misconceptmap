@@ -64,7 +64,6 @@ class Context:
         s = self.snap
         due = [r for r in s.review if r.due_in_hours <= 0]
         return {
-            "student": self.name,
             "today": self.today.isoformat(),
             "days_to_gate": max(0, (date.fromisoformat(s.gate_date) - self.today).days),
             "totals": s.totals.model_dump(),

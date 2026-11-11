@@ -43,6 +43,28 @@ function messageFrom(body: unknown, fallback: string): string {
   return fallback
 }
 
+// ---- slow-request tracking: the free server sleeps when idle and takes up to a minute to wake.
+const SLOW_AFTER_MS = 4000
+let slowCount = 0
+const slowListeners = new Set<() => void>()
+const setSlow = (delta: number) => {
+  slowCount += delta
+  slowListeners.forEach((cb) => cb())
+}
+/** For useSyncExternalStore: true while any request has been waiting longer than 4 seconds. */
+export const slowRequests = {
+  subscribe: (cb: () => void) => {
+    slowListeners.add(cb)
+    return () => void slowListeners.delete(cb)
+  },
+  get: () => slowCount > 0,
+}
+
+/** Wake the server as soon as the site opens, so it is ready by the time someone signs in. */
+export function wakeServer() {
+  fetch(`${API_URL}/health`).catch(() => {})
+}
+
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   const token = getToken()
   const headers = new Headers(init.headers)
@@ -50,10 +72,23 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (token) headers.set('Authorization', `Bearer ${token}`)
 
   let res: Response
+  let slow = false
+  const timer = setTimeout(() => {
+    slow = true
+    setSlow(1)
+  }, SLOW_AFTER_MS)
   try {
     res = await fetch(`${API_URL}${path}`, { ...init, headers })
   } catch {
-    throw new ApiError(0, 'Cannot reach the API. Is the backend running on port 8000?')
+    throw new ApiError(
+      0,
+      import.meta.env.PROD
+        ? "Can't reach the server. Check your connection and try again in a minute."
+        : 'Cannot reach the API. Is the backend running on port 8000?',
+    )
+  } finally {
+    clearTimeout(timer)
+    if (slow) setSlow(-1)
   }
   if (res.status === 204) return undefined as T
   const body = await res.json().catch(() => null)

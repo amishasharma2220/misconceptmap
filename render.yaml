@@ -1,0 +1,27 @@
+# Render blueprint for the backend API (free plan).
+# Render dashboard -> New -> Blueprint -> pick this repository. It then asks for the
+# three values marked "sync: false" below.
+services:
+  - type: web
+    name: misconceptmap-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    # Updates the database, then starts the server (see backend/start.sh).
+    startCommand: sh start.sh
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.5
+      - key: ENVIRONMENT
+        value: production
+      - key: JWT_SECRET
+        generateValue: true # Render creates a long random secret
+      - key: DATABASE_URL
+        sync: false # connection string from Neon or Supabase
+      - key: CORS_ORIGINS
+        sync: false # the Vercel address, e.g. https://misconceptmap.vercel.app
+      - key: LLM_API_KEY
+        sync: false # optional Gemini key; leave empty for the basic coach

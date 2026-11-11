@@ -83,7 +83,10 @@ export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
             <label className="flex gap-2 text-sm text-ink-soft">
               <input type="checkbox" className="mt-1" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
               <span>
-                Use my anonymised answers to evaluate MisconceptMap. Only answers and timings are stored.
+                Use my anonymised answers to evaluate MisconceptMap (optional).{' '}
+                <Link to="/privacy" className="text-omr hover:underline">
+                  What is stored
+                </Link>
               </span>
             </label>
           )}

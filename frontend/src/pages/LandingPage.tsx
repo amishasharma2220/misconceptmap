@@ -717,7 +717,7 @@ function Footer() {
   const cols: [string, [string, string][]][] = [
     ['Product', [['How it works', '#how'], ['Features', '#features'], ['AI coach', '#coach'], ['FAQ', '#faq']]],
     ['Subjects', [['Algorithms', '#features'], ['Operating systems', '#features'], ['Databases', '#features']]],
-    ['Account', [['Sign in', '/login'], ['Create account', '/signup']]],
+    ['Account', [['Sign in', '/login'], ['Create account', '/signup'], ['Privacy', '/privacy']]],
   ]
   return (
     <footer className="overflow-hidden bg-paper">

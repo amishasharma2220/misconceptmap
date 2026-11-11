@@ -58,6 +58,31 @@ Get a free key at <https://aistudio.google.com/apikey>, put it in `backend/.env`
 
 For tag drafting, the model only drafts: nothing reaches students until you approve the question, and each approval records whether the draft was accepted unchanged.
 
+## Going live
+
+Three free services: the database on Neon or Supabase, the backend on Render (`render.yaml`), the frontend on Vercel (`frontend/vercel.json`).
+
+1. **Database.** Create a PostgreSQL project and copy its connection string (`postgresql://...`). On Supabase use the *Session pooler* string.
+2. **Backend.** Render → New → Blueprint → this repository. It reads `render.yaml` and asks for `DATABASE_URL` (step 1), `CORS_ORIGINS` (the Vercel address from step 3; put a placeholder like `https://example.com` for now) and `LLM_API_KEY` (optional Gemini key). `backend/start.sh` updates the database and starts the server. Check `https://<your-api>.onrender.com/health`.
+3. **Frontend.** Vercel → Add New → Project → this repository, with **Root Directory** `frontend`. Add the environment variable `VITE_API_URL` = the Render address (no trailing slash), and optionally `VITE_CONTACT_EMAIL` to show a contact address on the privacy page.
+4. **Connect them.** In Render → Environment, set `CORS_ORIGINS` to the exact Vercel address (`https://...`, no trailing slash) and save; Render redeploys.
+5. **Content and admin.** Render's free plan has no shell, so run these from your own computer, pointed at the live database:
+
+   ```bash
+   cd backend && source .venv/bin/activate
+   export DATABASE_URL='<the connection string from step 1>'
+   python -m app.content.loader ../content/concepts/dsa.yaml
+   python -m app.content.questions_loader ../content/questions/dsa.yaml
+   python -m app.auth.make_admin you@example.com     # after signing up on the live site
+   unset DATABASE_URL
+   ```
+
+With `ENVIRONMENT=production` (set by `render.yaml`) the API refuses to start on the development secret, a localhost database or localhost CORS, and turns off `/docs`. `GET /health` reports whether the API can reach the database.
+
+On the free plan the backend sleeps after 15 minutes without visitors and takes up to a minute to wake. The site wakes it as soon as someone opens the landing page and shows a "waking the server up" message if a request is slow. Every push to `main` redeploys both services.
+
+Accounts: students can change their name and research-use choice, and permanently delete their account with all answers, mastery, reviews and coach conversations (Settings). Sign-in allows 5 wrong passwords per account from one address (20 from anywhere) per 15 minutes; sign-up allows 10 accounts per address per hour. These counters live in the API process, which suits a single instance.
+
 ### Tests
 
 ```bash

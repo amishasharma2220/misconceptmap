@@ -14,6 +14,10 @@ type AuthState = {
     consent_research: boolean
   }) => Promise<User>
   logout: () => void
+  /** save a changed name or research-use choice */
+  updateProfile: (changes: { display_name?: string; consent_research?: boolean }) => Promise<User>
+  /** permanently delete the account, then sign out */
+  deleteAccount: (password: string) => Promise<void>
 }
 
 const AuthContext = createContext<AuthState | null>(null)
@@ -49,6 +53,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         accept(await apiSend<TokenOut>('POST', '/auth/login', { email, password })),
       register: async (data) => accept(await apiSend<TokenOut>('POST', '/auth/register', data)),
       logout: () => {
+        setToken(null)
+        setHasToken(false)
+        qc.clear()
+      },
+      updateProfile: async (changes) => {
+        const user = await apiSend<User>('PATCH', '/me', changes)
+        qc.setQueryData(['me'], user)
+        return user
+      },
+      deleteAccount: async (password) => {
+        await apiSend('POST', '/me/delete', { password })
         setToken(null)
         setHasToken(false)
         qc.clear()

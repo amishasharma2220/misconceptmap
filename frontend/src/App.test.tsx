@@ -294,6 +294,62 @@ test('the coach page lists saved conversations and opens one', async () => {
   expect(await screen.findByText('Here is your week.')).toBeInTheDocument()
 })
 
+test('settings saves the research-use choice', async () => {
+  const fetch = signedIn('student', [['PATCH', '/me', 200, { ...student, consent_research: false }]])
+  renderApp(<App />, '/settings')
+  const box = await screen.findByRole('checkbox', { name: /Use my anonymised answers/ })
+  expect(box).toBeChecked()
+  await userEvent.click(box)
+  await waitFor(() => expect(box).not.toBeChecked())
+  const call = fetch.mock.calls.find(([, init]) => init?.method === 'PATCH')!
+  expect(JSON.parse(call[1]!.body as string)).toEqual({ consent_research: false })
+})
+
+test('settings saves a new name', async () => {
+  const fetch = signedIn('student', [['PATCH', '/me', 200, { ...student, display_name: 'Ami' }]])
+  renderApp(<App />, '/settings')
+  const name = await screen.findByLabelText('Name')
+  expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
+  await userEvent.clear(name)
+  await userEvent.type(name, 'Ami')
+  await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+  expect(await screen.findByText('Saved')).toBeInTheDocument()
+  const call = fetch.mock.calls.find(([, init]) => init?.method === 'PATCH')!
+  expect(JSON.parse(call[1]!.body as string)).toEqual({ display_name: 'Ami' })
+})
+
+test('deleting your data needs the password and signs you out', async () => {
+  const fetch = signedIn('student', [['POST', '/me/delete', 204, null]])
+  renderApp(<App />, '/settings')
+  await userEvent.click(await screen.findByRole('button', { name: 'Delete my data' }))
+  const confirm = screen.getByRole('button', { name: 'Delete everything permanently' })
+  expect(confirm).toBeDisabled()
+  await userEvent.type(screen.getByLabelText('Enter your password to confirm'), 'password123')
+  await userEvent.click(confirm)
+
+  expect(await screen.findByRole('heading', { level: 1 })).toBeInTheDocument() // landing page
+  expect(localStorage.getItem('mm.token')).toBeNull()
+  const call = fetch.mock.calls.find(([url]) => String(url).endsWith('/me/delete'))!
+  expect(JSON.parse(call[1]!.body as string)).toEqual({ password: 'password123' })
+})
+
+test('a wrong password keeps the account and shows the error', async () => {
+  signedIn('student', [['POST', '/me/delete', 403, { detail: 'Wrong password' }]])
+  renderApp(<App />, '/settings')
+  await userEvent.click(await screen.findByRole('button', { name: 'Delete my data' }))
+  await userEvent.type(screen.getByLabelText('Enter your password to confirm'), 'nope')
+  await userEvent.click(screen.getByRole('button', { name: 'Delete everything permanently' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('Wrong password')
+  expect(localStorage.getItem('mm.token')).toBe('tok')
+})
+
+test('the privacy page is public and linked from sign-up', async () => {
+  renderApp(<App />, '/signup')
+  await userEvent.click(screen.getByRole('link', { name: 'What is stored' }))
+  expect(screen.getByRole('heading', { name: 'Privacy' })).toBeInTheDocument()
+  expect(screen.getByText(/Delete my data permanently removes/)).toBeInTheDocument()
+})
+
 test('unknown routes show not found', () => {
   renderApp(<App />, '/nope')
   expect(screen.getByRole('heading', { name: 'Page not found' })).toBeInTheDocument()

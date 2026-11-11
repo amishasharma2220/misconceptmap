@@ -122,3 +122,11 @@ def bank(db, dsa):
     load_questions(db, yaml.safe_load(QUESTIONS_YAML.read_text()))
     db.flush()
     return dict(db.execute(select(Question.import_key, Question.id)).all())
+
+
+@pytest.fixture(autouse=True)
+def _fresh_rate_limits():
+    from app.auth import ratelimit
+
+    for limiter in (ratelimit.login_by_address, ratelimit.login_by_account, ratelimit.signups):
+        limiter.reset()

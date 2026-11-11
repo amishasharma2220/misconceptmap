@@ -3,6 +3,7 @@ import { AppShell } from './app/AppShell'
 import { RedirectIfSignedIn, RequireAdmin, RequireAuth } from './components/Layout'
 import { AuthPage } from './pages/AuthPage'
 import { LandingPage } from './pages/LandingPage'
+import { PrivacyPage } from './pages/PrivacyPage'
 import { QuestionEditorPage } from './pages/admin/QuestionEditorPage'
 import { QuestionsPage } from './pages/admin/QuestionsPage'
 import { AnalyticsPage } from './pages/student/AnalyticsPage'
@@ -32,6 +33,7 @@ export default function App() {
       <Route path="/" element={<RedirectIfSignedIn><LandingPage /></RedirectIfSignedIn>} />
       <Route path="/login" element={<RedirectIfSignedIn><AuthPage mode="login" /></RedirectIfSignedIn>} />
       <Route path="/signup" element={<RedirectIfSignedIn><AuthPage mode="signup" /></RedirectIfSignedIn>} />
+      <Route path="/privacy" element={<PrivacyPage />} />
 
       <Route element={<RequireAuth><AppShell /></RequireAuth>}>
         <Route path="/home" element={<DashboardPage />} />

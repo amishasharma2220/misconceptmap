@@ -10,14 +10,24 @@ from app.core.db import DbSession
 from app.practice.router import me_router
 from app.practice.router import router as practice_router
 
-app = FastAPI(title="MisconceptMap API", version="0.2.0")
+settings = get_settings()
+
+app = FastAPI(
+    title="MisconceptMap API",
+    version="0.5.0",
+    # The interactive API docs are a development tool; keep them off the live server.
+    docs_url=None if settings.is_production else "/docs",
+    redoc_url=None,
+    openapi_url=None if settings.is_production else "/openapi.json",
+)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=get_settings().cors_origin_list,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=settings.cors_origin_list,
+    # Sign-in uses a bearer token in a header, not cookies, so credentials are not needed.
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 

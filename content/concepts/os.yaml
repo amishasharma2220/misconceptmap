@@ -1,0 +1,114 @@
+# Operating Systems concept graph for GATE CS.
+# One concept = something small enough to be wrong about in one specific way.
+# `prereqs` lists slugs that must be understood first. The loader rejects cycles.
+
+subject:
+  code: OS
+  name: Operating Systems
+
+concepts:
+  # --- processes and scheduling ---
+  - slug: processes-threads
+    name: Processes and threads
+    difficulty: 1
+    description: Process states, PCB, context switching, user-level vs kernel-level threads.
+    prereqs: []
+
+  - slug: fork-exec
+    name: fork() and process creation
+    difficulty: 2
+    description: What fork() returns, how many processes a sequence of fork() calls creates, exec().
+    prereqs: [processes-threads]
+
+  - slug: cpu-scheduling
+    name: CPU scheduling (FCFS, SJF, SRTF)
+    difficulty: 2
+    description: Gantt charts, waiting and turnaround time, preemptive vs non-preemptive scheduling.
+    prereqs: [processes-threads]
+
+  - slug: round-robin-priority
+    name: Round robin and priority scheduling
+    difficulty: 2
+    description: Time quantum effects, starvation and aging, multilevel queues.
+    prereqs: [cpu-scheduling]
+
+  # --- synchronisation ---
+  - slug: critical-section
+    name: Critical section problem
+    difficulty: 2
+    description: Mutual exclusion, progress and bounded waiting; Peterson's solution and its predecessors.
+    prereqs: [processes-threads]
+
+  - slug: semaphores
+    name: Semaphores and mutexes
+    difficulty: 3
+    description: Counting and binary semaphores, wait/signal semantics, busy waiting vs blocking.
+    prereqs: [critical-section]
+
+  - slug: classic-sync-problems
+    name: Classic synchronisation problems
+    difficulty: 3
+    description: Producer-consumer, readers-writers, dining philosophers.
+    prereqs: [semaphores]
+
+  - slug: deadlock-conditions
+    name: Deadlock conditions and prevention
+    difficulty: 3
+    description: The four necessary conditions, resource-allocation graphs, minimum resources to avoid deadlock.
+    prereqs: [semaphores]
+
+  - slug: bankers-algorithm
+    name: Banker's algorithm and safe states
+    difficulty: 3
+    description: Deadlock avoidance, safe sequences, the Need matrix.
+    prereqs: [deadlock-conditions]
+
+  # --- memory ---
+  - slug: memory-allocation
+    name: Contiguous memory allocation
+    difficulty: 2
+    description: First, best and worst fit; internal and external fragmentation.
+    prereqs: []
+
+  - slug: paging
+    name: Paging and address translation
+    difficulty: 2
+    description: Logical vs physical addresses, page and frame numbers, page-table size.
+    prereqs: [memory-allocation]
+
+  - slug: multilevel-paging
+    name: Multilevel and inverted page tables
+    difficulty: 4
+    description: Splitting the page number across levels, page-table size at each level.
+    prereqs: [paging]
+
+  - slug: tlb
+    name: TLB and effective access time
+    difficulty: 3
+    description: TLB hit ratio, effective memory access time with and without a TLB.
+    prereqs: [paging]
+
+  - slug: page-replacement
+    name: Page replacement
+    difficulty: 3
+    description: FIFO, LRU and optimal replacement, counting page faults, Belady's anomaly.
+    prereqs: [paging]
+
+  - slug: virtual-memory
+    name: Demand paging and thrashing
+    difficulty: 3
+    description: Page-fault service time, effective access time with page faults, working sets, thrashing.
+    prereqs: [page-replacement, tlb]
+
+  # --- storage ---
+  - slug: file-allocation
+    name: File allocation and inodes
+    difficulty: 3
+    description: Contiguous, linked and indexed allocation; maximum file size with direct and indirect blocks.
+    prereqs: []
+
+  - slug: disk-scheduling
+    name: Disk scheduling
+    difficulty: 2
+    description: FCFS, SSTF, SCAN, C-SCAN and LOOK; total head movement.
+    prereqs: []

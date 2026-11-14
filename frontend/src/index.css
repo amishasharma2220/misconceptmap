@@ -64,6 +64,19 @@ body {
 .prose-q strong {
   font-weight: 700;
 }
+.prose-q table {
+  @apply my-2 block w-max max-w-full overflow-x-auto border-collapse text-sm;
+}
+.prose-q th,
+.prose-q td {
+  @apply border border-rule px-3 py-1.5 text-left;
+}
+.prose-q th {
+  @apply bg-paper font-bold;
+}
+.prose-q td {
+  font-variant-numeric: tabular-nums;
+}
 .prose-q .katex-display {
   margin: 0.5em 0;
   overflow-x: auto;

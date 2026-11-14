@@ -1,0 +1,115 @@
+# Databases concept graph for GATE CS.
+# One concept = something small enough to be wrong about in one specific way.
+# `prereqs` lists slugs that must be understood first. The loader rejects cycles.
+
+subject:
+  code: DBMS
+  name: Databases
+
+concepts:
+  # --- modelling ---
+  - slug: er-model
+    name: ER model
+    difficulty: 1
+    description: Entities, attributes, relationships, cardinality and participation, weak entities.
+    prereqs: []
+
+  - slug: relational-keys
+    name: Relational model and keys
+    difficulty: 1
+    description: Superkeys, candidate keys, primary keys, foreign keys and referential integrity.
+    prereqs: []
+
+  - slug: er-to-relational
+    name: ER to relational mapping
+    difficulty: 2
+    description: How many tables an ER diagram needs; mapping 1:1, 1:N and M:N relationships.
+    prereqs: [er-model, relational-keys]
+
+  # --- query languages ---
+  - slug: relational-algebra
+    name: Relational algebra
+    difficulty: 2
+    description: Selection, projection, joins, set operations and division.
+    prereqs: [relational-keys]
+
+  - slug: relational-calculus
+    name: Tuple relational calculus
+    difficulty: 3
+    description: TRC queries, quantifiers, safe expressions, equivalence with algebra.
+    prereqs: [relational-algebra]
+
+  - slug: sql-basics
+    name: SQL queries and NULLs
+    difficulty: 2
+    description: SELECT, WHERE, joins, IN and NOT IN subqueries, three-valued logic with NULL.
+    prereqs: [relational-algebra]
+
+  - slug: sql-aggregation
+    name: SQL aggregation and grouping
+    difficulty: 3
+    description: Aggregate functions and NULLs, GROUP BY, HAVING, correlated subqueries, EXISTS and ALL.
+    prereqs: [sql-basics]
+
+  # --- design theory ---
+  - slug: functional-dependencies
+    name: Functional dependencies
+    difficulty: 3
+    description: Attribute closure, Armstrong's axioms, finding all candidate keys, minimal cover.
+    prereqs: [relational-keys]
+
+  - slug: normal-forms
+    name: Normal forms
+    difficulty: 3
+    description: 1NF, 2NF, 3NF and BCNF; partial and transitive dependencies.
+    prereqs: [functional-dependencies]
+
+  - slug: decomposition
+    name: Lossless and dependency-preserving decomposition
+    difficulty: 4
+    description: The lossless-join test, dependency preservation, decomposing into 3NF and BCNF.
+    prereqs: [normal-forms]
+
+  # --- transactions ---
+  - slug: transactions-acid
+    name: Transactions and ACID
+    difficulty: 1
+    description: Atomicity, consistency, isolation, durability; schedules and commit.
+    prereqs: []
+
+  - slug: serializability
+    name: Conflict and view serializability
+    difficulty: 3
+    description: Conflicting operations, precedence graphs, equivalent serial orders, view serializability.
+    prereqs: [transactions-acid]
+
+  - slug: recoverability
+    name: Recoverable and cascadeless schedules
+    difficulty: 3
+    description: Recoverable, cascadeless and strict schedules; when commits must wait.
+    prereqs: [serializability]
+
+  - slug: locking-2pl
+    name: Two-phase locking
+    difficulty: 3
+    description: Basic, strict and rigorous 2PL; what each guarantees and what it does not.
+    prereqs: [serializability, recoverability]
+
+  - slug: timestamp-ordering
+    name: Timestamp ordering
+    difficulty: 4
+    description: Basic timestamp protocol, rollbacks, Thomas write rule.
+    prereqs: [serializability]
+
+  # --- storage ---
+  - slug: file-organization
+    name: File organisation and indexes
+    difficulty: 2
+    description: Records per block, primary, clustering and secondary indexes, block accesses.
+    prereqs: []
+
+  - slug: bplus-trees
+    name: B and B+ trees
+    difficulty: 3
+    description: Node order from block size, height and capacity, insertion and splitting.
+    prereqs: [file-organization]

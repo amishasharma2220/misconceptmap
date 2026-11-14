@@ -275,7 +275,7 @@ export function DashboardPage() {
                 <div>
                   <p className="font-bold">{s.name}</p>
                   <p className="tnum text-xs text-ink-soft">
-                    {attempts} questions · {pct(acc)} accuracy
+                    {attempts} {attempts === 1 ? 'question' : 'questions'} · {pct(acc)} accuracy
                   </p>
                 </div>
               </div>

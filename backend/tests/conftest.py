@@ -130,3 +130,20 @@ def _fresh_rate_limits():
 
     for limiter in (ratelimit.login_by_address, ratelimit.login_by_account, ratelimit.signups):
         limiter.reset()
+
+
+CONTENT = Path(__file__).resolve().parents[2] / "content"
+SUBJECTS = ["dsa", "os", "dbms"]
+
+
+@pytest.fixture
+def all_content(db):
+    """Every subject's concept graph and question bank; returns {question key: id}."""
+    for s in SUBJECTS:
+        subject, specs = parse_file(CONTENT / "concepts" / f"{s}.yaml")
+        load_subject(db, subject, specs)
+    db.flush()
+    for s in SUBJECTS:
+        load_questions(db, yaml.safe_load((CONTENT / "questions" / f"{s}.yaml").read_text()))
+    db.flush()
+    return dict(db.execute(select(Question.import_key, Question.id)).all())

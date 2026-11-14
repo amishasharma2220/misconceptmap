@@ -1,0 +1,463 @@
+# Starter Operating Systems questions for MisconceptMap. Original questions written for this
+# project (not copied from GATE papers). Import with:
+#   python -m app.content.questions_loader ../content/questions/os.yaml
+# Every wrong option that reflects a known wrong belief points at a misconception below.
+
+misconceptions:
+  - slug: fork-adds-one-process
+    concept: fork-exec
+    title: Each fork() call adds one process in total
+    explanation: |
+      fork() is executed by *every* process that reaches it, and each of them gets a child.
+      So every fork() doubles the number of processes: $n$ forks in sequence give $2^n$
+      processes, not $n + 1$.
+    example: "fork(); fork(); creates 4 processes, not 3."
+
+  - slug: srtf-treated-as-sjf
+    concept: cpu-scheduling
+    title: SRTF only picks a job when the CPU becomes free
+    explanation: |
+      SRTF (shortest remaining time first) is the *preemptive* form of SJF. Whenever a new job
+      arrives, its burst is compared with the running job's remaining time, and the running job
+      is preempted if the newcomer is shorter.
+
+  - slug: waiting-equals-turnaround
+    concept: cpu-scheduling
+    title: Waiting time and turnaround time are the same thing
+    explanation: |
+      Turnaround time = completion − arrival. Waiting time = turnaround − burst: the time spent
+      ready but not running. They differ by the job's own burst time.
+
+  - slug: smaller-quantum-always-better
+    concept: round-robin-priority
+    title: A smaller time quantum always improves round robin
+    explanation: |
+      A smaller quantum improves response time, but it can make average turnaround time worse,
+      and every extra preemption costs a context switch. Two jobs of 10 units each finish at
+      10 and 20 with quantum 10, but at 19 and 20 with quantum 1.
+
+  - slug: round-robin-starves
+    concept: round-robin-priority
+    title: Round robin can starve long jobs
+    explanation: |
+      Every ready process gets the CPU within $(n-1)q$ time units, so no job waits forever.
+      Starvation is a problem of priority and SJF-style scheduling, not of round robin.
+
+  - slug: strict-alternation-breaks-mutex
+    concept: critical-section
+    title: Strict alternation fails mutual exclusion
+    explanation: |
+      With a shared `turn` variable, only the process whose turn it is can enter, so mutual
+      exclusion holds. What fails is *progress*: a process that wants to enter can be blocked by
+      one that does not want the critical section at all.
+
+  - slug: strict-alternation-unbounded-wait
+    concept: critical-section
+    title: Strict alternation lets a process wait forever
+    explanation: |
+      After a process leaves the critical section it hands `turn` to the other, so a waiting
+      process enters after at most one turn of the other. Waiting is bounded; progress is what
+      fails.
+
+  - slug: wait-increments-semaphore
+    concept: semaphores
+    title: wait (P) increases the semaphore
+    explanation: |
+      `wait` / `P` / `down` *decrements* the semaphore (and blocks if no unit is available).
+      `signal` / `V` / `up` *increments* it.
+
+  - slug: semaphore-order-dependent
+    concept: semaphores
+    title: The final value depends on the order of P and V operations
+    explanation: |
+      Once all operations have completed, every P has subtracted 1 and every V has added 1.
+      Order changes who blocks and when, but not the final value: initial − #P + #V.
+
+  - slug: deadlock-needs-full-demand
+    concept: deadlock-conditions
+    title: Deadlock is impossible only if every process's maximum fits at once
+    explanation: |
+      It is enough that *one* process can always get its full demand. With $n$ processes each
+      needing at most $k$ units, $n(k-1) + 1$ units guarantee that at least one process finishes
+      and releases its units.
+
+  - slug: deadlock-units-equal-processes
+    concept: deadlock-conditions
+    title: One unit per process is enough to avoid deadlock
+    explanation: |
+      If every process holds one unit and each needs one more, nobody can proceed. The safe
+      minimum is $n(k-1) + 1$, which is more than $n$ whenever $k \ge 2$.
+
+  - slug: page-table-forget-entry-size
+    concept: paging
+    title: Page-table size equals the number of entries
+    explanation: |
+      Number of entries = $2^{\text{page-number bits}}$, but each entry takes several bytes.
+      Page-table size = entries × entry size.
+
+  - slug: page-table-is-page-size
+    concept: paging
+    title: The page table is the size of one page
+    explanation: |
+      A page table has one entry per page of the *logical* address space. Its size depends on
+      the address-space size and entry size, not on the page size alone.
+
+  - slug: tlb-miss-one-access
+    concept: tlb
+    title: A TLB miss still needs only one memory access
+    explanation: |
+      On a TLB miss the page-table entry must be read from memory first, then the data:
+      two memory accesses (for a single-level page table), plus the TLB lookup.
+
+  - slug: lru-shows-belady
+    concept: page-replacement
+    title: LRU can suffer Belady's anomaly
+    explanation: |
+      LRU is a *stack algorithm*: the pages held with $k$ frames are always a subset of those
+      held with $k+1$ frames, so adding frames never adds faults. FIFO is not a stack algorithm
+      and can show the anomaly.
+
+  - slug: lru-as-fifo
+    concept: page-replacement
+    title: LRU evicts the page that was loaded first
+    explanation: |
+      LRU evicts the page *used* least recently. A page loaded long ago but used just now is
+      kept. Evicting the earliest-loaded page is FIFO.
+
+  - slug: scan-turns-at-last-request
+    concept: disk-scheduling
+    title: SCAN turns around at the last request
+    explanation: |
+      SCAN (elevator) travels all the way to the end of the disk before reversing. Turning at
+      the last pending request is LOOK.
+
+  - slug: indirect-block-one-block
+    concept: file-allocation
+    title: An indirect pointer adds one data block
+    explanation: |
+      An indirect pointer points to a block *full of pointers*. With 1 KB blocks and 4-byte
+      addresses it adds 256 data blocks, not 1.
+
+  - slug: double-indirect-adds
+    concept: file-allocation
+    title: A double-indirect pointer adds twice as many blocks as a single one
+    explanation: |
+      Each of the 256 pointers in the first-level block points to another block of 256
+      pointers: $256 \times 256 = 65536$ data blocks. Levels multiply, they do not add.
+
+  - slug: worst-fit-fits-more
+    concept: memory-allocation
+    title: Worst fit fits more processes because it leaves big holes
+    explanation: |
+      Worst fit breaks up the largest hole first, so a large process that arrives later may find
+      no hole big enough. Which strategy fits more depends on the requests; worst fit has no
+      general advantage.
+
+questions:
+  - key: os-fork-001
+    concept: fork-exec
+    difficulty: 2
+    source: original
+    stem: |
+      How many times does this program print `hi`?
+
+      ```c
+      #include <stdio.h>
+      #include <unistd.h>
+
+      int main(void) {
+          fork();
+          fork();
+          fork();
+          printf("hi\n");
+          return 0;
+      }
+      ```
+    options:
+      - text: "3"
+      - text: "4"
+        misconception: fork-adds-one-process
+      - text: "8"
+        correct: true
+      - text: "6"
+    explanation: |
+      Each fork() is run by every process alive at that point, doubling the count:
+      1 → 2 → 4 → 8 processes. All 8 reach the `printf`.
+
+  - key: os-sched-001
+    concept: cpu-scheduling
+    difficulty: 3
+    source: original
+    stem: |
+      Four processes arrive as shown. Under **SRTF** (shortest remaining time first), what is
+      the average waiting time?
+
+      | Process | Arrival | Burst |
+      |---|---|---|
+      | P1 | 0 | 8 |
+      | P2 | 1 | 4 |
+      | P3 | 2 | 9 |
+      | P4 | 3 | 5 |
+    options:
+      - text: "6.5"
+        correct: true
+      - text: "7.75"
+        misconception: srtf-treated-as-sjf
+      - text: "8.75"
+      - text: "13"
+        misconception: waiting-equals-turnaround
+    explanation: |
+      P1 runs 0–1. P2 arrives with burst 4 < P1's remaining 7, so P2 runs 1–5. At 5 the
+      remaining times are P1 7, P3 9, P4 5, so P4 runs 5–10, then P1 10–17, then P3 17–26.
+      Waiting = completion − arrival − burst: P1 $17-0-8=9$, P2 $5-1-4=0$, P3 $26-2-9=15$,
+      P4 $10-3-5=2$. Average $= 26/4 = 6.5$.
+
+  - key: os-rr-001
+    concept: round-robin-priority
+    difficulty: 2
+    source: original
+    stem: |
+      Which statement about round-robin scheduling is correct?
+    options:
+      - text: If the time quantum is larger than every burst, round robin behaves like FCFS
+        correct: true
+      - text: Reducing the time quantum always reduces average turnaround time
+        misconception: smaller-quantum-always-better
+      - text: A process with a very long burst can starve
+        misconception: round-robin-starves
+      - text: Round robin is a non-preemptive algorithm
+    explanation: |
+      With a quantum larger than every burst, each process runs to completion in arrival order:
+      exactly FCFS. A smaller quantum can raise average turnaround time (two 10-unit jobs finish
+      at 10 and 20 with $q=10$ but at 19 and 20 with $q=1$). Every process gets a turn within
+      $(n-1)q$, so nothing starves, and preemption at the end of each quantum is the whole point.
+
+  - key: os-cs-001
+    concept: critical-section
+    difficulty: 3
+    source: original
+    stem: |
+      Two processes share `int turn = 0;` and use this code to enter their critical sections:
+
+      ```c
+      /* P0 */                      /* P1 */
+      while (turn != 0) ;           while (turn != 1) ;
+      /* critical section */        /* critical section */
+      turn = 1;                     turn = 0;
+      ```
+
+      Which requirement of the critical-section problem does this solution violate?
+    options:
+      - text: Mutual exclusion
+        misconception: strict-alternation-breaks-mutex
+      - text: Progress
+        correct: true
+      - text: Bounded waiting
+        misconception: strict-alternation-unbounded-wait
+      - text: None; it is a correct solution
+    explanation: |
+      Only the process whose turn it is may enter, so mutual exclusion holds, and after leaving
+      a process hands over the turn, so waiting is bounded. But the processes must strictly
+      alternate: if P0 leaves and wants to enter again while P1 is busy elsewhere, P0 is stuck
+      even though the critical section is free. That violates progress.
+
+  - key: os-sem-001
+    concept: semaphores
+    difficulty: 2
+    source: original
+    stem: |
+      A counting semaphore `S` starts at 7. Over time, 20 `wait(S)` and 15 `signal(S)`
+      operations are performed by various processes, in some order, and all of them complete.
+      What is the final value of `S`?
+    options:
+      - text: "2"
+        correct: true
+      - text: "12"
+        misconception: wait-increments-semaphore
+      - text: "0"
+      - text: It depends on the order of the operations
+        misconception: semaphore-order-dependent
+    explanation: |
+      Each completed `wait` subtracts 1 and each `signal` adds 1, whatever the order:
+      $7 - 20 + 15 = 2$.
+
+  - key: os-dl-001
+    concept: deadlock-conditions
+    difficulty: 3
+    source: original
+    stem: |
+      Three processes share identical units of one resource type. Each process needs at most
+      **2** units and releases them all when it finishes. What is the minimum number of units
+      that guarantees deadlock can never occur?
+    options:
+      - text: "3"
+        misconception: deadlock-units-equal-processes
+      - text: "4"
+        correct: true
+      - text: "5"
+      - text: "6"
+        misconception: deadlock-needs-full-demand
+    explanation: |
+      With 3 units, each process can hold 1 and wait for a second: deadlock. With
+      $n(k-1)+1 = 3 \cdot 1 + 1 = 4$ units, at least one process can always get both of its
+      units, finish and release them, so the others can proceed.
+
+  - key: os-mem-001
+    concept: memory-allocation
+    difficulty: 2
+    source: original
+    stem: |
+      Memory has free partitions of 100 KB, 500 KB, 200 KB, 300 KB and 600 KB, in that order.
+      Processes of 212 KB, 417 KB, 112 KB and 426 KB arrive in that order. A partition that
+      is used keeps its leftover space as a smaller free hole.
+
+      Which strategy places **all four** processes?
+    options:
+      - text: First fit only
+      - text: Best fit only
+        correct: true
+      - text: Worst fit only
+        misconception: worst-fit-fits-more
+      - text: All three strategies
+    explanation: |
+      **Best fit:** 212→300, 417→500, 112→200, 426→600. All fit.
+      **First fit:** 212→500 (288 left), 417→600 (183 left), 112→288 (176 left); the largest
+      hole is now 300, so 426 must wait.
+      **Worst fit:** 212→600 (388 left), 417→500 (83 left), 112→388 (276 left); the largest
+      hole is now 300, so 426 must wait.
+
+  - key: os-paging-001
+    concept: paging
+    difficulty: 2
+    source: original
+    stem: |
+      A system has 32-bit logical addresses, 4 KB pages and 4-byte page-table entries, with a
+      single-level page table. How big is one process's page table?
+    options:
+      - text: 1 MB
+        misconception: page-table-forget-entry-size
+      - text: 4 KB
+        misconception: page-table-is-page-size
+      - text: 4 MB
+        correct: true
+      - text: 16 MB
+    explanation: |
+      4 KB $= 2^{12}$ bytes, so the offset takes 12 bits and the page number $32 - 12 = 20$ bits.
+      That gives $2^{20}$ entries of 4 bytes each: $2^{22}$ bytes $= 4$ MB.
+
+  - key: os-paging-002
+    concept: paging
+    difficulty: 2
+    source: original
+    type: NAT
+    stem: |
+      A system has 32-bit logical addresses, 8 KB pages and 4-byte page-table entries, with a
+      single-level page table. What is the size of one page table, **in MB**?
+    answer: [2, 2]
+    explanation: |
+      8 KB $= 2^{13}$ bytes, so the page number has $32 - 13 = 19$ bits: $2^{19}$ entries.
+      $2^{19} \times 4 = 2^{21}$ bytes $= 2$ MB.
+
+  - key: os-tlb-001
+    concept: tlb
+    also: [paging]
+    difficulty: 3
+    source: original
+    stem: |
+      A TLB lookup takes 10 ns and a memory access takes 100 ns. The TLB is searched first; on a
+      miss, the single-level page table in memory is read, then the data. The TLB hit ratio is
+      90%. What is the effective memory access time?
+    options:
+      - text: 100 ns
+      - text: 110 ns
+        misconception: tlb-miss-one-access
+      - text: 120 ns
+        correct: true
+      - text: 210 ns
+    explanation: |
+      Hit: $10 + 100 = 110$ ns. Miss: $10 + 100 + 100 = 210$ ns (page table, then data).
+      $0.9 \times 110 + 0.1 \times 210 = 99 + 21 = 120$ ns.
+
+  - key: os-pr-001
+    concept: page-replacement
+    difficulty: 2
+    source: original
+    stem: |
+      Which page-replacement algorithm can show **Belady's anomaly** (more frames giving more
+      page faults)?
+    options:
+      - text: FIFO only
+        correct: true
+      - text: LRU only
+        misconception: lru-shows-belady
+      - text: Both FIFO and LRU
+        misconception: lru-shows-belady
+      - text: Optimal only
+    explanation: |
+      LRU and optimal are stack algorithms: with more frames they always hold a superset of the
+      pages they would hold with fewer, so faults never increase. FIFO is not a stack algorithm,
+      and some reference strings give it more faults with more frames.
+
+  - key: os-pr-002
+    concept: page-replacement
+    difficulty: 3
+    source: original
+    stem: |
+      With 3 initially empty frames and **LRU** replacement, how many page faults does this
+      reference string cause?
+
+      `7, 0, 1, 2, 0, 3, 0, 4`
+    options:
+      - text: "5"
+      - text: "6"
+        correct: true
+      - text: "7"
+        misconception: lru-as-fifo
+      - text: "8"
+    explanation: |
+      7, 0, 1: three faults. 2: fault, evict 7 (least recently used) → {2, 0, 1}.
+      0: hit. 3: fault; 1 was used longest ago, evict it → {2, 0, 3}. 0: hit.
+      4: fault; 2 was used longest ago, evict it → {4, 0, 3}. Total 6.
+      FIFO would evict 0 at the reference to 3 (it was loaded before 1 and 2), then fault on
+      the next 0: 7 faults.
+
+  - key: os-disk-001
+    concept: disk-scheduling
+    difficulty: 3
+    source: original
+    stem: |
+      A disk has cylinders 0–199. The head is at cylinder 50, moving towards higher cylinders.
+      Pending requests: 82, 170, 43, 140, 24, 16, 190. Using **SCAN**, what is the total head
+      movement in cylinders?
+    options:
+      - text: "208"
+      - text: "314"
+        misconception: scan-turns-at-last-request
+      - text: "332"
+        correct: true
+      - text: "391"
+    explanation: |
+      SCAN goes up to the end of the disk, serving 82, 140, 170, 190, reaches 199, then reverses
+      to serve 43, 24 and 16. Movement: $(199 - 50) + (199 - 16) = 149 + 183 = 332$.
+      Turning at 190 instead is LOOK: $140 + 174 = 314$. 208 is SSTF.
+
+  - key: os-file-001
+    concept: file-allocation
+    difficulty: 3
+    source: original
+    stem: |
+      A file system uses 1 KB blocks and 4-byte block addresses. Each inode has 10 direct
+      pointers, 1 single-indirect pointer and 1 double-indirect pointer. What is the largest
+      possible file size?
+    options:
+      - text: 12 KB
+        misconception: indirect-block-one-block
+      - text: 778 KB
+        misconception: double-indirect-adds
+      - text: 65536 KB
+      - text: 65802 KB
+        correct: true
+    explanation: |
+      One block holds $1024 / 4 = 256$ addresses. Direct: 10 blocks. Single indirect: 256 blocks.
+      Double indirect: $256 \times 256 = 65536$ blocks. Total $10 + 256 + 65536 = 65802$ blocks
+      of 1 KB each.

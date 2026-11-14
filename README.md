@@ -30,8 +30,8 @@ python -m venv .venv && source .venv/bin/activate    # Windows: .venv\Scripts\ac
 pip install -r requirements.txt
 cp .env.example .env
 alembic upgrade head
-python -m app.content.loader ../content/concepts/dsa.yaml
-python -m app.content.questions_loader ../content/questions/dsa.yaml
+python -m app.content.loader ../content/concepts/*.yaml
+python -m app.content.questions_loader ../content/questions/*.yaml
 uvicorn app.main:app --reload
 
 # 3. Frontend (http://localhost:5173)
@@ -71,8 +71,8 @@ Three free services: the database on Neon or Supabase, the backend on Render (`r
    ```bash
    cd backend && source .venv/bin/activate
    export DATABASE_URL='<the connection string from step 1>'
-   python -m app.content.loader ../content/concepts/dsa.yaml
-   python -m app.content.questions_loader ../content/questions/dsa.yaml
+   python -m app.content.loader ../content/concepts/*.yaml
+   python -m app.content.questions_loader ../content/questions/*.yaml
    python -m app.auth.make_admin you@example.com     # after signing up on the live site
    unset DATABASE_URL
    ```

@@ -16,3 +16,9 @@ test('renders Markdown code blocks', () => {
   const { container } = render(<Markdown>{'```c\nint x = 1;\n```'}</Markdown>)
   expect(container.querySelector('pre code')?.textContent).toContain('int x = 1;')
 })
+
+test('renders Markdown tables, as used in scheduling questions', () => {
+  const { container } = render(<Markdown>{'| Process | Burst |\n|---|---|\n| P1 | 8 |'}</Markdown>)
+  expect(container.querySelectorAll('table th')).toHaveLength(2)
+  expect(container.querySelector('table td')?.textContent).toBe('P1')
+})

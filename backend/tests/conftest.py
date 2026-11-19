@@ -143,7 +143,7 @@ def all_content(db):
         subject, specs = parse_file(CONTENT / "concepts" / f"{s}.yaml")
         load_subject(db, subject, specs)
     db.flush()
-    for s in SUBJECTS:
-        load_questions(db, yaml.safe_load((CONTENT / "questions" / f"{s}.yaml").read_text()))
+    for path in sorted((CONTENT / "questions").glob("*.yaml")):
+        load_questions(db, yaml.safe_load(path.read_text()))
     db.flush()
     return dict(db.execute(select(Question.import_key, Question.id)).all())

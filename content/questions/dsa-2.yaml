@@ -1,0 +1,486 @@
+# DSA questions, batch 2: one or more questions for every DSA concept that had none.
+# Original questions written for this project (not copied from GATE papers).
+#   python -m app.content.questions_loader ../content/questions/dsa-2.yaml
+# Every answer was worked by hand and re-computed by script before being added.
+
+misconceptions:
+  - slug: avl-must-be-perfect
+    concept: avl-trees
+    title: An AVL tree of height h is a perfect binary tree
+    explanation: |
+      AVL only requires the heights of the two subtrees of every node to differ by at most 1.
+      The sparsest AVL tree of height $h$ has $N(h) = N(h-1) + N(h-2) + 1$ nodes, far fewer than
+      the $2^{h+1} - 1$ of a perfect tree.
+
+  - slug: binary-search-floor-log
+    concept: binary-search
+    title: Binary search needs at most ⌊log₂ n⌋ probes
+    explanation: |
+      Each probe halves the range, but the last probe is still a probe. The worst case is
+      $\lfloor \log_2 n \rfloor + 1$ probes: 10 for $n = 1000$, not 9.
+
+  - slug: selection-sort-adaptive
+    concept: comparison-sorting
+    title: Selection sort finishes early on sorted input
+    explanation: |
+      Selection sort scans the whole unsorted part on every pass to find the minimum, whatever
+      the order. It always makes $n(n-1)/2$ comparisons. Insertion sort is the one that stops
+      early on sorted input.
+
+  - slug: heap-sort-stable
+    concept: heap-sort
+    title: Heap sort is stable
+    explanation: |
+      Moving the maximum to the end and sifting down can swap equal keys past each other, so heap
+      sort is not stable. It is in-place and $O(n \log n)$ in the worst case.
+
+  - slug: heap-sort-adaptive
+    concept: heap-sort
+    title: Heap sort is linear on already-sorted input
+    explanation: |
+      Heap sort builds a heap and then does $n - 1$ extract-max steps of $O(\log n)$ each,
+      regardless of the input order. It stays $\Theta(n \log n)$ on sorted input.
+
+  - slug: quicksort-stable
+    concept: sorting-stability-inplace
+    title: Quicksort is stable
+    explanation: |
+      Standard in-place partitioning swaps elements across long distances, so equal keys can
+      change their relative order. Quicksort is in-place but not stable.
+
+  - slug: selection-sort-stable
+    concept: sorting-stability-inplace
+    title: Selection sort is stable
+    explanation: |
+      Swapping the minimum into place can jump an element over an equal one. For example,
+      sorting $(2_a, 2_b, 1)$ swaps $2_a$ with $1$, giving $(1, 2_b, 2_a)$.
+
+  - slug: lower-bound-is-n-log-n-exactly
+    concept: sorting-lower-bound
+    title: The lower bound is exactly n log₂ n comparisons
+    explanation: |
+      A comparison sort's decision tree needs at least $n!$ leaves, so its height is at least
+      $\lceil \log_2 n! \rceil$. That grows like $n \log n$, but for a given $n$ it is smaller
+      than $n \log_2 n$: for $n = 5$ it is 7, not 12.
+
+  - slug: lower-bound-n-minus-1
+    concept: sorting-lower-bound
+    title: n − 1 comparisons are enough to sort
+    explanation: |
+      $n - 1$ comparisons are enough to *check* that an array is sorted, or to find its
+      maximum. Sorting has to tell all $n!$ orders apart, which needs
+      $\lceil \log_2 n! \rceil$ comparisons in the worst case.
+
+  - slug: adjacency-list-counts-edge-once
+    concept: graph-representation
+    title: In an undirected graph each edge appears once in the adjacency lists
+    explanation: |
+      Edge $\{u, v\}$ is stored in $u$'s list *and* in $v$'s list. The lists hold $2e$ entries
+      in total, which is also why the sum of degrees is $2e$.
+
+  - slug: dfs-shortest-path
+    concept: bfs-dfs
+    title: DFS finds shortest paths in an unweighted graph
+    explanation: |
+      DFS follows one branch as deep as it can, so it may reach a vertex by a long path first.
+      BFS explores level by level, which is why its tree gives the fewest-edges distance.
+
+  - slug: bfs-weighted
+    concept: bfs-dfs
+    title: BFS finds shortest paths in weighted graphs too
+    explanation: |
+      BFS minimises the *number of edges*. With weights, a path with more edges can be lighter;
+      that needs Dijkstra's algorithm (or Bellman–Ford with negative weights).
+
+  - slug: topo-unique
+    concept: topological-sort
+    title: A DAG has exactly one topological order
+    explanation: |
+      Vertices with no path between them can appear in either order. A DAG has a unique
+      topological order only if it contains a path through all of its vertices.
+
+  - slug: isolated-vertex-fixed
+    concept: topological-sort
+    title: An isolated vertex has a fixed place in the order
+    explanation: |
+      A vertex with no edges is constrained by nothing, so it can go in any position. With 5
+      vertices it multiplies the count by 5.
+
+  - slug: mst-is-shortest-path-tree
+    concept: minimum-spanning-trees
+    title: The MST contains the shortest path between every pair of vertices
+    explanation: |
+      The MST minimises the *total* weight of the tree, not each pair's distance. The path
+      between two vertices in the MST can be longer than a direct edge that was left out.
+
+  - slug: heaviest-edge-never-in-mst
+    concept: minimum-spanning-trees
+    title: The heaviest edge of a graph is never in its MST
+    explanation: |
+      If the heaviest edge is a bridge (the only connection between two parts of the graph),
+      every spanning tree must use it. What is true is that the heaviest edge of a *cycle* is
+      never needed.
+
+  - slug: dijkstra-ok-without-negative-cycles
+    concept: shortest-paths
+    title: Dijkstra works with negative edges as long as there is no negative cycle
+    explanation: |
+      Dijkstra finalises a vertex as soon as it is extracted, assuming no later path can be
+      shorter. One negative edge can break that assumption even with no negative cycle. Use
+      Bellman–Ford.
+
+  - slug: add-constant-keeps-paths
+    concept: shortest-paths
+    title: Adding the same constant to every edge keeps shortest paths the same
+    explanation: |
+      A path with $k$ edges grows by $k \cdot c$, so paths with fewer edges gain less. The
+      shortest path can change. (Multiplying every weight by a positive constant is safe.)
+
+  - slug: greedy-solves-01-knapsack
+    concept: greedy-algorithms
+    title: Picking items by value-to-weight ratio solves 0/1 knapsack
+    explanation: |
+      The ratio greedy is optimal only for the *fractional* knapsack, where an item can be split.
+      With whole items, it can leave capacity unused that a different combination would fill.
+      0/1 knapsack needs dynamic programming.
+
+  - slug: knapsack-can-split
+    concept: greedy-algorithms
+    title: In 0/1 knapsack you can take part of an item
+    explanation: |
+      0/1 means each item is taken whole or not at all. Taking fractions is the fractional
+      knapsack problem, which has a larger optimum.
+
+  - slug: lcs-is-substring
+    concept: dynamic-programming
+    title: A common subsequence must be contiguous
+    explanation: |
+      A subsequence keeps the order of characters but may skip some. A substring must be
+      contiguous. The longest common subsequence can be much longer than the longest common
+      substring.
+
+  - slug: matrix-chain-order-irrelevant
+    concept: dynamic-programming
+    title: The order of multiplying a matrix chain does not affect the cost
+    explanation: |
+      Matrix multiplication is associative, so every order gives the same *result*, but the
+      number of scalar multiplications can differ hugely. Finding the cheapest order is the
+      matrix-chain problem.
+
+questions:
+  - key: dsa-avl-001
+    concept: avl-trees
+    also: [binary-search-trees]
+    difficulty: 3
+    source: original
+    stem: |
+      The height of a tree with a single node is 0. What is the **minimum** number of nodes in
+      an AVL tree of height 4?
+    options:
+      - text: "7"
+      - text: "12"
+        correct: true
+      - text: "16"
+      - text: "31"
+        misconception: avl-must-be-perfect
+    explanation: |
+      The sparsest AVL tree of height $h$ has a root, one subtree of height $h-1$ and one of
+      height $h-2$: $N(h) = N(h-1) + N(h-2) + 1$, with $N(0) = 1$ and $N(1) = 2$.
+      $N(2) = 4$, $N(3) = 7$, $N(4) = 12$. (7 is the answer for height 3; 31 is a perfect tree.)
+
+  - key: dsa-bs-001
+    concept: binary-search
+    difficulty: 2
+    source: original
+    stem: |
+      Binary search runs on a sorted array of 1000 distinct elements. Each probe compares the
+      target with one element. What is the largest number of probes a **successful** search
+      can need?
+    options:
+      - text: "9"
+        misconception: binary-search-floor-log
+      - text: "10"
+        correct: true
+      - text: "500"
+      - text: "1000"
+    explanation: |
+      Each probe at least halves the remaining range. After $k$ probes, at most $2^k - 1$
+      elements can have been distinguished, so $k$ must satisfy $2^k - 1 \ge 1000$:
+      $k = 10 = \lfloor \log_2 1000 \rfloor + 1$.
+
+  - key: dsa-sort-001
+    concept: comparison-sorting
+    difficulty: 2
+    source: original
+    stem: |
+      Which algorithm makes only $\Theta(n)$ comparisons when the input is **already sorted**?
+    options:
+      - text: Selection sort
+        misconception: selection-sort-adaptive
+      - text: Insertion sort
+        correct: true
+      - text: Heap sort
+        misconception: heap-sort-adaptive
+      - text: Merge sort (standard top-down)
+    explanation: |
+      Insertion sort compares each new element with its left neighbour, finds it already in
+      place and stops: $n - 1$ comparisons. Selection sort always scans the rest of the array,
+      heap sort always does $n - 1$ extract-max steps, and merge sort still merges every level.
+
+  - key: dsa-heapsort-001
+    concept: heap-sort
+    also: [binary-heaps]
+    difficulty: 2
+    source: original
+    stem: |
+      Which statement about heap sort is correct?
+    options:
+      - text: It is in-place and runs in $O(n \log n)$ time in the worst case
+        correct: true
+      - text: It is stable
+        misconception: heap-sort-stable
+      - text: It runs in $O(n)$ time when the input is already sorted
+        misconception: heap-sort-adaptive
+      - text: It needs $\Theta(n)$ extra memory for the heap
+    explanation: |
+      The heap is built inside the input array and sorted elements are moved to its end, so no
+      extra array is needed. Build-heap is $O(n)$ and the $n - 1$ extractions are $O(\log n)$
+      each, whatever the input. Sifting can move equal keys past each other, so it is not stable.
+
+  - key: dsa-stable-001
+    concept: sorting-stability-inplace
+    difficulty: 3
+    source: original
+    type: MSQ
+    stem: |
+      Which of these sorting algorithms are **stable** in their standard textbook form?
+      Select all that apply.
+    options:
+      - text: Insertion sort
+        correct: true
+      - text: Merge sort
+        correct: true
+      - text: Quicksort
+        misconception: quicksort-stable
+      - text: Selection sort
+        misconception: selection-sort-stable
+    explanation: |
+      Insertion sort only moves an element past *larger* ones, and merge sort takes from the
+      left half on ties, so both keep equal keys in order. Quicksort's partitioning and
+      selection sort's long-distance swap can both reorder equal keys.
+
+  - key: dsa-lb-001
+    concept: sorting-lower-bound
+    difficulty: 3
+    source: original
+    stem: |
+      Any comparison-based algorithm must make at least how many comparisons in the worst case
+      to sort 5 distinct elements?
+    options:
+      - text: "4"
+        misconception: lower-bound-n-minus-1
+      - text: "7"
+        correct: true
+      - text: "10"
+      - text: "12"
+        misconception: lower-bound-is-n-log-n-exactly
+    explanation: |
+      The decision tree must have a leaf for each of the $5! = 120$ orders, and a binary tree of
+      height $h$ has at most $2^h$ leaves. $2^6 = 64 < 120 \le 128 = 2^7$, so at least 7
+      comparisons are needed. (10 is the number of pairs, which no algorithm needs to compare.)
+
+  - key: dsa-graph-001
+    concept: graph-representation
+    difficulty: 1
+    source: original
+    stem: |
+      An undirected graph has 10 vertices and 15 edges and is stored as adjacency lists.
+      How many entries do all the lists contain in total?
+    options:
+      - text: "15"
+        misconception: adjacency-list-counts-edge-once
+      - text: "25"
+      - text: "30"
+        correct: true
+      - text: "100"
+    explanation: |
+      Each undirected edge $\{u, v\}$ appears in $u$'s list and in $v$'s list: $2 \times 15 = 30$
+      entries. (100 would be the cells of a $10 \times 10$ adjacency matrix.)
+
+  - key: dsa-bfs-001
+    concept: bfs-dfs
+    also: [shortest-paths]
+    difficulty: 2
+    source: original
+    stem: |
+      Which statement is correct?
+    options:
+      - text: In an unweighted graph, BFS from $s$ finds the fewest-edges distance from $s$ to every reachable vertex
+        correct: true
+      - text: In an unweighted graph, DFS from $s$ also finds the fewest-edges distance to every vertex
+        misconception: dfs-shortest-path
+      - text: BFS finds minimum-weight paths in graphs with positive edge weights
+        misconception: bfs-weighted
+      - text: With adjacency lists, BFS takes $\Theta(V^2)$ time
+    explanation: |
+      BFS visits all vertices at distance $d$ before any at distance $d + 1$, so the first time
+      it reaches a vertex is along a fewest-edges path. DFS may first reach a vertex by a long
+      detour. Weights need Dijkstra. With adjacency lists BFS is $\Theta(V + E)$.
+
+  - key: dsa-topo-001
+    concept: topological-sort
+    difficulty: 3
+    source: original
+    stem: |
+      A directed graph has vertices $a, b, c, d, e$ and edges
+      $a \to b$, $a \to c$, $b \to d$, $c \to d$. Vertex $e$ has no edges.
+      How many topological orderings does it have?
+    options:
+      - text: "1"
+        misconception: topo-unique
+      - text: "2"
+        misconception: isolated-vertex-fixed
+      - text: "10"
+        correct: true
+      - text: "120"
+    explanation: |
+      Ignoring $e$: $a$ must come first and $d$ last, with $b$ and $c$ in either order: 2
+      orderings of $a, b, c, d$. $e$ can then be placed in any of the 5 positions:
+      $2 \times 5 = 10$.
+
+  - key: dsa-mst-001
+    concept: minimum-spanning-trees
+    difficulty: 3
+    source: original
+    stem: |
+      Which statement about minimum spanning trees of a connected, undirected, weighted graph
+      is correct?
+    options:
+      - text: If all edge weights are distinct, the MST is unique
+        correct: true
+      - text: The path between any two vertices in the MST is a shortest path in the graph
+        misconception: mst-is-shortest-path-tree
+      - text: The heaviest edge of the graph is never in the MST
+        misconception: heaviest-edge-never-in-mst
+      - text: Prim's and Kruskal's algorithms can produce MSTs of different total weight
+    explanation: |
+      With distinct weights, the cut property picks a unique lightest edge across every cut, so
+      only one MST exists. The MST minimises total weight, not pairwise distances; a heaviest
+      edge that is a bridge must be in every spanning tree; and every MST has the same total
+      weight, whichever algorithm finds it.
+
+  - key: dsa-mst-002
+    concept: minimum-spanning-trees
+    difficulty: 3
+    source: original
+    type: NAT
+    stem: |
+      An undirected graph has vertices 1 to 5 and these weighted edges:
+
+      | Edge | 1–2 | 1–3 | 2–3 | 2–4 | 3–4 | 3–5 | 4–5 | 2–5 |
+      |---|---|---|---|---|---|---|---|---|
+      | Weight | 4 | 1 | 2 | 5 | 8 | 10 | 2 | 7 |
+
+      What is the total weight of its minimum spanning tree?
+    answer: [10, 10]
+    explanation: |
+      Kruskal, lightest first: 1–3 (1) take; 2–3 (2) take; 4–5 (2) take; 1–2 (4) skip, it would
+      close the cycle 1–3–2; 2–4 (5) take, joining {1, 2, 3} with {4, 5}. Four edges for five
+      vertices: $1 + 2 + 2 + 5 = 10$.
+
+  - key: dsa-sp-001
+    concept: shortest-paths
+    difficulty: 3
+    source: original
+    stem: |
+      Which statement about single-source shortest paths is correct?
+    options:
+      - text: Dijkstra's algorithm is correct on any graph that has no negative cycle
+        misconception: dijkstra-ok-without-negative-cycles
+      - text: Bellman–Ford can report a negative cycle reachable from the source
+        correct: true
+      - text: Adding the same positive constant to every edge weight never changes the shortest paths
+        misconception: add-constant-keeps-paths
+      - text: Dijkstra's algorithm with a binary heap takes $O(V^2 \log V)$ time on every graph
+    explanation: |
+      After $V - 1$ rounds of relaxation Bellman–Ford has final distances unless a negative
+      cycle is reachable, so one more round that still improves some distance reveals the cycle.
+      Dijkstra can fail with a single negative edge. Adding $c$ to every edge favours paths with
+      fewer edges. Dijkstra with a binary heap is $O((V + E) \log V)$.
+
+  - key: dsa-greedy-001
+    concept: greedy-algorithms
+    difficulty: 3
+    source: original
+    type: NAT
+    stem: |
+      Six characters appear with these frequencies in a message:
+
+      | Character | a | b | c | d | e | f |
+      |---|---|---|---|---|---|---|
+      | Frequency | 5 | 9 | 12 | 13 | 16 | 45 |
+
+      With an optimal Huffman code, how many bits does the encoded message take?
+    answer: [224, 224]
+    explanation: |
+      Merge the two smallest repeatedly: 5+9=14, 12+13=25, 14+16=30, 25+30=55, 45+55=100.
+      The total length is the sum of all merged weights: $14 + 25 + 30 + 55 + 100 = 224$ bits,
+      against $3 \times 100 = 300$ for a fixed 3-bit code.
+
+  - key: dsa-greedy-002
+    concept: greedy-algorithms
+    also: [dynamic-programming]
+    difficulty: 3
+    source: original
+    stem: |
+      A knapsack holds weight 50. The items are (value, weight): (60, 10), (100, 20), (120, 30).
+      Each item is taken **whole or not at all**. What is the maximum total value?
+    options:
+      - text: "160"
+        misconception: greedy-solves-01-knapsack
+      - text: "220"
+        correct: true
+      - text: "240"
+        misconception: knapsack-can-split
+      - text: "280"
+    explanation: |
+      The best whole-item choice is (100, 20) and (120, 30): weight 50, value 220. Taking items
+      by value/weight ratio (6, 5, 4) picks the first two, value 160, and the third no longer
+      fits. 240 needs two-thirds of the third item, which only the fractional problem allows.
+
+  - key: dsa-dp-001
+    concept: dynamic-programming
+    difficulty: 3
+    source: original
+    stem: |
+      What is the length of the **longest common subsequence** of `ABCBDAB` and `BDCABA`?
+    options:
+      - text: "2"
+        misconception: lcs-is-substring
+      - text: "3"
+      - text: "4"
+        correct: true
+      - text: "5"
+    explanation: |
+      Filling the table $L[i][j] = L[i-1][j-1] + 1$ on a match, else $\max(L[i-1][j], L[i][j-1])$,
+      gives 4; one such subsequence is `BCBA`. The longest common *substring* (contiguous) has
+      length only 2, for example `AB`.
+
+  - key: dsa-dp-002
+    concept: dynamic-programming
+    difficulty: 3
+    source: original
+    stem: |
+      Matrices $A$ ($40 \times 20$), $B$ ($20 \times 30$) and $C$ ($30 \times 10$) are multiplied
+      as $ABC$. What is the minimum number of scalar multiplications needed?
+    options:
+      - text: "14000"
+        correct: true
+      - text: "24000"
+      - text: "36000"
+        misconception: matrix-chain-order-irrelevant
+      - text: "8000"
+    explanation: |
+      $(AB)C$: $40 \cdot 20 \cdot 30 + 40 \cdot 30 \cdot 10 = 24000 + 12000 = 36000$.
+      $A(BC)$: $20 \cdot 30 \cdot 10 + 40 \cdot 20 \cdot 10 = 6000 + 8000 = 14000$.
+      The second order is cheaper.

@@ -6,13 +6,15 @@ import yaml
 from sqlalchemy import func, select
 
 from app.models import Misconception, Option, Question, Subject
-from tests.conftest import CONTENT, SUBJECTS
+from tests.conftest import CONTENT
 
 
 def test_every_subject_loads_with_approved_questions(db, all_content):
     codes = set(db.scalars(select(Subject.code)))
     assert codes == {"DSA", "OS", "DBMS"}
-    assert db.scalar(select(func.count()).select_from(Question)) == len(all_content) == 41
+    files = sorted((CONTENT / "questions").glob("*.yaml"))
+    expected = sum(len(yaml.safe_load(f.read_text())["questions"]) for f in files)
+    assert db.scalar(select(func.count()).select_from(Question)) == len(all_content) == expected
     assert set(db.scalars(select(Question.status))) == {"approved"}
 
 
@@ -29,9 +31,8 @@ def test_every_wrong_option_misconception_belongs_to_a_tested_subject(db, all_co
 
 def test_question_keys_are_unique_across_files():
     keys = Counter()
-    for s in SUBJECTS:
-        data = yaml.safe_load((CONTENT / "questions" / f"{s}.yaml").read_text())
-        keys.update(q["key"] for q in data["questions"])
+    for path in (CONTENT / "questions").glob("*.yaml"):
+        keys.update(q["key"] for q in yaml.safe_load(path.read_text())["questions"])
     assert [k for k, n in keys.items() if n > 1] == []
 
 
@@ -103,3 +104,13 @@ def test_snapshot_lists_all_three_subjects(client, student_headers, all_content)
     snap = client.get("/me/snapshot", headers=student_headers).json()
     assert [s["code"] for s in snap["subjects"]] == ["DSA", "OS", "DBMS"]
     assert {q["subject"] for q in snap["questions"]} == {"DSA", "OS", "DBMS"}
+
+
+def test_every_concept_has_at_least_one_question(db, all_content):
+    from app.models import Concept, QuestionConcept
+
+    tested = set(db.scalars(select(QuestionConcept.concept_id)))
+    missing = sorted(db.scalars(select(Concept.slug).where(Concept.id.not_in(tested))))
+    # OS and DBMS still have gaps; DSA must be complete.
+    dsa = set(db.scalars(select(Concept.slug).join(Subject).where(Subject.code == "DSA")))
+    assert [m for m in missing if m in dsa] == []
